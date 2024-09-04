@@ -1,6 +1,6 @@
 {
-  "name": "mediasoup-demo-server",
-  "version": "3.0.0",
+  "name": "webrtc-server",
+  "version": "1.0.0",
   "private": true,
   "description": "mediasoup demo server",
   "author": "Iñaki Baz Castillo <ibc@aliax.net>",

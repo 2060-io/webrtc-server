@@ -2,7 +2,7 @@ version: '3.7'
 services:
   mediasoup:
     build: .
-    image: 2060-webrtc-server:test
+    image: webrtc-server:test
     environment:
       - MEDIASOUP_ANNOUNCED_IP=192.168.10.15
       - PROTOO_LISTEN_PORT=443

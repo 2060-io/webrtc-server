@@ -10,7 +10,7 @@ check_error() {
 
 export MEDIASOUP_ANNOUNCED_IP=$(hostname -i)
 
-echo "running mediasoup-demo server.js with ip $MEDIASOUP_ANNOUNCED_IP"
+echo "running WebRTC server with ip $MEDIASOUP_ANNOUNCED_IP"
 
 # Run the server
 echo "Starting the server..."

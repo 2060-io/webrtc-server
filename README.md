@@ -1,4 +1,4 @@
-# 2060-Webrtc-Server with Mediasoup, Docker, Kubernetes and Turn Server
+# WebRTC Server with Mediasoup, Docker, Kubernetes and Turn Server
 
 This application, based on [Mediasoup-demo v3](https://github.com/versatica/mediasoup-demo/tree/v3), has been extensively modified and customized for the 2060 project to include a TURN server, specifically Coturn.
 
@@ -6,21 +6,21 @@ You can deploy the demo using Docker or Kubernetes, with integration of the [Cot
 
 ## Table of Contents
 
-- [2060-Webrtc-Server with Mediasoup, Docker, Kubernetes and Turn Server](#2060-webrtc-server-with-mediasoup-docker-kubernetes-and-turn-server)
+- [WebRTC Server with Mediasoup, Docker, Kubernetes and Turn Server](#webrtc-server-with-mediasoup-docker-kubernetes-and-turn-server)
   - [Table of Contents](#table-of-contents)
   - [Pre-requisites](#pre-requisites)
   - [Enviroment Variables](#enviroment-variables)
   - [Diagram of solution webrtc-server](#diagram-of-solution-webrtc-server)
-  - [How to change the tcp port (Web app and WSS).](#how-to-change-the-tcp-port-web-app-and-wss)
+  - [Changing the TCP Port (Web App and WSS)](#changing-the-tcp-port-web-app-and-wss)
   - [Docker build](#docker-build)
   - [Docker Running](#docker-running)
   - [Kubernetes Running](#kubernetes-running)
-- [Webrtc Server API](#webrtc-server-api)
-  - [GetRoomID](#getroomid)
-    - [Request](#request)
-    - [Response](#response)
-  - [Other Server Endpoints](#other-server-endpoints)
-  - [ICE Server Configuration](#ice-server-configuration)
+  - [WebRTC Server API](#webrtc-server-api)
+    - [`getRoomId`](#getroomid)
+      - [Request](#request)
+      - [Response](#response)
+    - [Other Server Endpoints](#other-server-endpoints)
+    - [ICE Server Configuration](#ice-server-configuration)
 
 ## Pre-requisites
 
@@ -66,11 +66,11 @@ Additional variables for configuring the `webrtc-server`:
 `Server`, The port is configured in `server/config.js` with `PROTOO_LISTEN_PORT`.
 
 ```
-git clone https://gitlab.mobiera.com/2060/2060-webrtc-server.git
+git clone https://github.com/2060-io/webrtc-server.git
 vi docker-compose.yml
 services:
   mediasoup:
-    image: mediasoup-demo-docker
+    image: webrtc-server:test
     environment:
       PROTOO_LISTEN_PORT: 443
     ports:
@@ -113,7 +113,7 @@ docker-compose up
 
 **`IMPORTANT`**, Ensure the Kubernetes load balancer allows UDP traffic to the Coturn service nodes. Set the public IP in the `.env` file as `MEDIASOUP_CLIENT_ICESERVER_HOST` enviroment variable.
 
-## Webrtc Server API
+## WebRTC Server API
 
 ### `getRoomId`
 

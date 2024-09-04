@@ -10,6 +10,7 @@
 	WORKDIR /server
 
 	COPY package.json .
+	COPY package-lock.json .
 	RUN  npm install
 	COPY server.js .
 	COPY config.js .
