@@ -1,8 +1,8 @@
 # WebRTC Server with Mediasoup, Docker, Kubernetes and Turn Server
 
-This application, based on [Mediasoup-demo v3](https://github.com/versatica/mediasoup-demo/tree/v3), has been extensively modified and customized for the 2060 project to include a TURN server, specifically Coturn.
+This application, based on [Mediasoup-demo v3](https://github.com/versatica/mediasoup-demo/tree/v3), has been extensively modified and customized for 2060 to include a TURN server, specifically Coturn.
 
-You can deploy the demo using Docker or Kubernetes, with integration of the [Coturn](https://github.com/coturn/coturn) server for TURN functionality.
+You can deploy it using Docker or Kubernetes, with integration of the [Coturn](https://github.com/coturn/coturn) server for TURN functionality.
 
 ## Table of Contents
 
@@ -91,9 +91,9 @@ docker build . -t 2060-webrtc-server:test
 
 Should the start.sh script fail to detect the container's IP address, you may modify the Dockerfile by replacing CMD ["sh", "/service/start.sh"] with CMD ["node", "/service/server.js"]. Subsequently, manually set the MEDIASOUP_ANNOUNCED_IP variable.
 
-You are required to generate the certificates private-key.pem and public-certificate.pem and store them in a directory accessible to the application. While the default directory is certificates, you have the flexibility to specify an alternative directory name by configuring the HTTPS_CERTIFICATES_PATH environment variable.
+You are required to generate a certificate and place both its public and private part in PEM format in a directory reachable by the application. The full path must be set on `HTTPS_CERT_FULLCHAIN` and `HTTPS_CERT_PRIVKEY` environment variable respectively.
 
-Certificates can be created using OpenSSL with the execution of the following commands:
+Certificate can be created using OpenSSL with the execution of the following commands:
 
 ```bash
 openssl genpkey -algorithm RSA -out privkey.pem
