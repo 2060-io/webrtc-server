@@ -28,6 +28,7 @@ const axios = require('axios')
 const Docker = require('dockerode')
 const logger = new Logger()
 const randomString = require('random-string')
+const { validateCreateRoomParams } = require('./lib/middlewares');
 
 // Async queue to manage rooms.
 // @type {AwaitQueue}
@@ -36,6 +37,9 @@ const queue = new AwaitQueue()
 // Map of Room instances indexed by roomId.
 // @type {Map<Number, Room>}
 const rooms = new Map()
+
+// Maps of eventNotificationUri
+const notificationsUri = new Map()
 
 // HTTPS server.
 // @type {https.Server}
@@ -169,6 +173,40 @@ async function createExpressApp() {
         next(error)
       })
   })
+
+
+expressApp.post('/createRoom', validateCreateRoomParams, async (req, res) => {
+  const { eventNotificationUri, maxPeersRoom, roomId } = req.body;
+
+  // If roomId is not provided, generate a random one
+  const roomIdToUse = roomId || randomString({ length: 8, numeric: true, letters: true }).toLowerCase();
+  // Port of connection websocket
+  const port = process.env.MEDIASOUP_CLIENT_PROTOOPORT
+  // Host or Ip where try connect ws
+  const announcedIp = config.https.ingressHost
+  // Ws url to response
+  const wsUrl = `wss://${announcedIp}:${port}?roomId=${roomIdToUse}&peerId=`
+
+  try {
+    // Create or retrieve an existing room
+    const createRoom = await getOrCreateRoom({ roomId: roomIdToUse, consumerReplicas: 0, maxPeersRoom });
+    
+    // Store the eventNotificationUri associated with the roomId
+    notificationsUri.set(roomIdToUse, eventNotificationUri);
+
+    const data = {
+      roomId:roomIdToUse ,
+      wsUrl,
+    };
+
+    // Return success response
+    res.status(200).json(data);
+  } catch (error) {
+    console.error('Error creating room:', error);
+    // Return error response
+    res.status(500).json({ error: 'Error creating room' });
+  }
+});
 
   /*
    * Route allows a generate meeting hall API
@@ -493,11 +531,53 @@ async function runProtooWebSocketServer() {
       .push(async () => {
         const room = await getOrCreateRoom({ roomId, consumerReplicas })
 
+        // Check if the room has reached the maxPeersCount limit
+        if (room.peers.size >= room.maxPeersRoom) {
+          reject(403, 'Room is full, cannot accept more peers');
+          return;
+        }
+
         // Accept the protoo WebSocket connection.
         const protooWebSocketTransport = accept()
 
         room.handleProtooConnection({ peerId, protooWebSocketTransport })
+
+        // Fetch the eventNotificationUri from the notificationsUri map
+        const eventNotificationUri = notificationsUri.get(roomId);
+
+        // If the eventNotificationUri exists, send the notification
+        if (eventNotificationUri) {
+          const notificationData = {
+            peerId: peerId,
+            event: `peer-joined`,
+          };
+          const url = notificationsUri.get(eventNotificationUri)
+          axios.post(url, notificationData)
+          .then((response) => {
+            logger.info(`Notification sent to ${eventNotificationUri}: ${response.status}`);
+          })
+          .catch((error) => {
+            logger.error(`Failed to send notification to ${eventNotificationUri}:`, error);
+          });
+        }
       })
+
+      protooWebSocketServer.on('close', () => {
+        logger.info(`Peer ${peerId} has disconnected from room ${roomId}`);
+        const notificationData = {
+            peerId: peerId,
+            event: `'peer-left'`,
+          };
+          const url = notificationsUri.get(eventNotificationUri)
+          axios.post(url, notificationData)
+          .then((response) => {
+            logger.info(`Notification sent to ${eventNotificationUri}: ${response.status}`);
+          })
+          .catch((error) => {
+            logger.error(`Failed to send notification to ${eventNotificationUri}:`, error);
+          });
+      })
+
       .catch((error) => {
         logger.error('room creation or room joining failed:%o', error)
 
@@ -520,7 +600,7 @@ function getMediasoupWorker() {
 /**
  * Get a Room instance (or create one if it does not exist).
  */
-async function getOrCreateRoom({ roomId, consumerReplicas }) {
+async function getOrCreateRoom({ roomId, consumerReplicas, maxPeersRoom }) {
   let room = rooms.get(roomId)
 
   // If the Room does not exist create a new one.
@@ -529,7 +609,7 @@ async function getOrCreateRoom({ roomId, consumerReplicas }) {
 
     const mediasoupWorker = getMediasoupWorker()
 
-    room = await Room.create({ mediasoupWorker, roomId, consumerReplicas })
+    room = await Room.create({ mediasoupWorker, roomId, consumerReplicas, maxPeersRoom })
 
     rooms.set(roomId, room)
     room.on('close', () => rooms.delete(roomId))
