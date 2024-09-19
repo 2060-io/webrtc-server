@@ -1,0 +1,18 @@
+version: '3.9'
+
+services:
+  pymediasoup-service-client:
+    build: .
+    container_name: pymediasoup-service-client
+    ports:
+      - "5000:5000"
+    environment:
+      FLASK_APP: app.py
+      FLASK_ENV: test
+      DEFAULT_VIDEO_SRC_URL: "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_2mb.mp4"
+    networks:
+      - networks-bridge
+
+networks:
+  networks-bridge:
+    driver: bridge
