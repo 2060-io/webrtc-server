@@ -85,7 +85,7 @@ services:
 - Run docker build in the server folder
 
 ```
-git clone https://gitlab.mobiera.com/2060/2060-webrtc-server.git
+git clone https://github.com/2060-io/webrtc-server.git
 docker build . -t 2060-webrtc-server:test
 ```
 
