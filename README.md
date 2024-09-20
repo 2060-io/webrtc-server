@@ -9,18 +9,18 @@ You can deploy it using Docker or Kubernetes, with integration of the [Coturn](h
 - [WebRTC Server with Mediasoup, Docker, Kubernetes and Turn Server](#webrtc-server-with-mediasoup-docker-kubernetes-and-turn-server)
   - [Table of Contents](#table-of-contents)
   - [Pre-requisites](#pre-requisites)
-  - [Enviroment Variables](#enviroment-variables)
+  - [Environment Variables](#environment-variables)
   - [Diagram of solution webrtc-server](#diagram-of-solution-webrtc-server)
   - [Changing the TCP Port (Web App and WSS)](#changing-the-tcp-port-web-app-and-wss)
   - [Docker build](#docker-build)
   - [Docker Running](#docker-running)
   - [Kubernetes Running](#kubernetes-running)
   - [WebRTC Server API](#webrtc-server-api)
-    - [`getRoomId`](#getroomid)
-      - [Request](#request)
-      - [Response](#response)
-    - [Other Server Endpoints](#other-server-endpoints)
-    - [ICE Server Configuration](#ice-server-configuration)
+    - [GetRoomId](#get-room-id)
+    - [Create Rooms](#create-rooms)
+    - [Config](#config)
+    - [Other Server Mediasoup Endpoints](#other-server-mediasoup-endpoints)
+  - [ICE Server Configuration](#ice-server-configuration)
 
 ## Pre-requisites
 
@@ -115,9 +115,9 @@ docker-compose up
 
 ## WebRTC Server API
 
-### `getRoomId`
+### GetRoomId
 
-This endpoint was added to the WebRTC server to generate the roomId and the websocket connection that the mobile application will use for communication.
+This endpoint was added to the WebRTC server to generate the roomId and the websocket connection that the mobile application will use for communication. **This endpoint has been Deprecated**
 
 Set the mandatory variable MEDIASOUP_INGRESS_HOST with the application's ingress to be used by the endpoint to form the connection wsUrl.
 
@@ -144,22 +144,91 @@ MEDIASOUP_INGRESS_HOST='localhost'
 }
 ```
 
-### Other Server Endpoints
+### Create Rooms 
+
+This endpoint is used to create a new room or use an existing room based on the provided or generated `roomId`. It returns the WebSocket URL and the `roomId` used, and checks for unique room identifiers before proceeding.
+
+#### Request
+
+- Method: POST
+- Endpoint: `/rooms/:roomId?`
+- Port: 443
+- Body:
+
+```json
+{
+  "eventNotificationUri": "http://example.com/notification",
+  "maxPeerCount": 50
+}
+```
+
+#### Response
+
+- Status Code: 200 (OK)
+- Body:
+
+```json
+{
+  "roomId": "12345abcde",
+  "wsUrl": "wss://localhost:443?roomId=12345abcde"
+}
+```
+#### Error
+
+- Status Code: 500 (Internal Server Error)
+- Body:
+
+```json
+{
+  "error": "Room with roomId 12345abcde already exists."
+}
+```
+
+### Config
+
+Provides the current configuration of the server as defined in the `config.js` file.
+
+#### Request
+
+- Method: GET
+- Endpoint: `/config`
+- Port: 443
+
+#### Response
+
+- Status Code: 200 (OK)
+- Body example:
+
+```json
+{
+  "config": {
+    "https": {
+      "listenPort": 443,
+      "listenIp": "localhost",
+      "tls": {
+        "cert": "/path/to/cert.pem",
+        "key": "/path/to/key.pem"
+      }
+    }
+  }
+}
+```
+
+### Other Server Mediasoup Endpoints
 
 Comprehensive endpoints for various functionalities:
 
-- `/config`: Returns the configuration of the mediasoup server.
-- `/rooms/:roomId`: Returns the RTP capabilities of the mediasoup router for a specific room.
-- `/rooms/:roomId/broadcasters`: Creates a new broadcaster in a specific room.
-- `/rooms/:roomId/broadcasters/:broadcasterId`: Deletes a broadcaster from a specific room.
-- `/rooms/:roomId/broadcasters/:broadcasterId/transports`: Creates a new transport associated with a broadcaster.
-- `/rooms/:roomId/broadcasters/:broadcasterId/transports/:transportId/connect`: Connects a transport belonging to a broadcaster.
-- `/rooms/:roomId/broadcasters/:broadcasterId/transports/:transportId/producers`: Creates a new producer associated with a broadcaster.
-- `/rooms/:roomId/broadcasters/:broadcasterId/transports/:transportId/consume`: Creates a new consumer associated with a broadcaster.
-- `/rooms/:roomId/broadcasters/:broadcasterId/transports/:transportId/consume/data`: Creates a new data consumer associated with a broadcaster.
-- `/rooms/:roomId/broadcasters/:broadcasterId/transports/:transportId/produce/data`: Creates a new data producer associated with a broadcaster.
+- `/rooms/:roomId`: `GET`Returns the RTP capabilities of the mediasoup router for a specific room.
+- `/rooms/:roomId/broadcasters`: `POST` Creates a new broadcaster in a specific room.
+- `/rooms/:roomId/broadcasters/:broadcasterId`: `DELETE` Deletes a broadcaster from a specific room.
+- `/rooms/:roomId/broadcasters/:broadcasterId/transports`: `POST` Creates a new transport associated with a broadcaster.
+- `/rooms/:roomId/broadcasters/:broadcasterId/transports/:transportId/connect`: `POST` Connects a transport belonging to a broadcaster.
+- `/rooms/:roomId/broadcasters/:broadcasterId/transports/:transportId/producers`: `POST` Creates a new producer associated with a broadcaster.
+- `/rooms/:roomId/broadcasters/:broadcasterId/transports/:transportId/consume`: `POST` Creates a new consumer associated with a broadcaster.
+- `/rooms/:roomId/broadcasters/:broadcasterId/transports/:transportId/consume/data`: `POST` Creates a new data consumer associated with a broadcaster.
+- `/rooms/:roomId/broadcasters/:broadcasterId/transports/:transportId/produce/data`: `POST` Creates a new data producer associated with a broadcaster.
 
-### ICE Server Configuration
+## ICE Server Configuration
 
 Retrieve ICE Server settings via a peer websocket request to create a WebRTC Transport `createWebRtcTransport`:
 
