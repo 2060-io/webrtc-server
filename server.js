@@ -28,6 +28,7 @@ const axios = require('axios')
 const Docker = require('dockerode')
 const logger = new Logger()
 const randomString = require('random-string')
+const { validateCreateRoomParams } = require('./lib/middlewares');
 
 // Async queue to manage rooms.
 // @type {AwaitQueue}
@@ -36,6 +37,9 @@ const queue = new AwaitQueue()
 // Map of Room instances indexed by roomId.
 // @type {Map<Number, Room>}
 const rooms = new Map()
+
+// Maps of eventNotificationUris
+const notificationUris = new Map()
 
 // HTTPS server.
 // @type {https.Server}
@@ -169,6 +173,46 @@ async function createExpressApp() {
         next(error)
       })
   })
+
+
+expressApp.post('/rooms/:roomId?', validateCreateRoomParams, async (req, res) => {
+  const { eventNotificationUri, maxPeerCount } = req.body;
+  const roomId = req.params.roomId;
+
+  // If roomId is not provided, generate a random one
+  const roomIdToUse = roomId ?? randomString({ length: 8, numeric: true, letters: true }).toLowerCase();
+  // Port of connection websocket
+  const port = process.env.MEDIASOUP_CLIENT_PROTOOPORT
+  // Host or Ip where try connect ws
+  const announcedIp = config.https.ingressHost
+  // Ws url to response
+  const wsUrl = `wss://${announcedIp}:${port}?roomId=${roomIdToUse}`
+
+  try {
+    // Check if roomId already exists in notificationsUris
+    if (notificationUris.has(roomIdToUse)) {
+      throw new Error(`Room with roomId ${roomIdToUse} already exists.`);
+    }
+
+    // Create or retrieve an existing room
+    await getOrCreateRoom({ roomId: roomIdToUse, consumerReplicas: 0, maxPeerCount });
+    
+    // Store the eventNotificationUri associated with the roomId
+    notificationsUris.set(roomIdToUse, eventNotificationUri);
+
+    const data = {
+      roomId:roomIdToUse ,
+      wsUrl,
+    };
+
+    // Return success response
+    res.status(200).json(data);
+  } catch (error) {
+    console.error('Error creating room:', error);
+    // Return error response
+    res.status(500).json({ error: 'Error creating room' });
+  }
+});
 
   /*
    * Route allows a generate meeting hall API
@@ -444,6 +488,27 @@ async function runHttpsServer() {
 }
 
 /**
+ * Sends a notification to a specified URI when a peer joins or leaves the roomId.
+ * 
+ * @param {string} eventNotificationUri - The URI to which the notification will be sent.
+ * @param {Object} notificationData - The data to be sent as the body of the POST request.
+ * @param {string} notificationData.peerId - The ID of the peer involved in the event.
+ * @param {string} notificationData.event - The type of event ('peer-joined' or 'peer-left').
+ */
+async function sendNotification(eventNotificationUri, notificationData) {
+  if (eventNotificationUri) {
+    const url = notificationUris.get(eventNotificationUri);
+    try {
+      const response = await axios.post(url, notificationData);
+      logger.info(`Notification sent to ${eventNotificationUri}: ${response.status}`);
+    } catch (error) {
+      logger.error(`Failed to send notification to ${eventNotificationUri}:`, error);
+    }
+  }
+}
+
+
+/**
  * Create a protoo WebSocketServer to allow WebSocket connections from browsers.
  */
 async function runProtooWebSocketServer() {
@@ -486,6 +551,16 @@ async function runProtooWebSocketServer() {
       info.origin
     )
 
+    peerId.on('close',async () => {
+        logger.info(`Peer ${peerId} has disconnected from room ${roomId}`);
+        const eventNotificationUri = notificationUris.get(roomId);
+        const leaveNotificationData = {
+            peerId,
+            event: 'peer-left',
+        };
+        await sendNotification(eventNotificationUri, leaveNotificationData);
+    })
+
     // Serialize this code into the queue to avoid that two peers connecting at
     // the same time with the same roomId create two separate rooms with same
     // roomId.
@@ -493,16 +568,29 @@ async function runProtooWebSocketServer() {
       .push(async () => {
         const room = await getOrCreateRoom({ roomId, consumerReplicas })
 
+        // Check if the room has reached the maxPeerCount limit
+        if (room.peers.size >= room.maxPeerCount) {
+          reject(403, 'Room is full, cannot accept more peers');
+          return;
+        }
+
         // Accept the protoo WebSocket connection.
         const protooWebSocketTransport = accept()
 
         room.handleProtooConnection({ peerId, protooWebSocketTransport })
-      })
-      .catch((error) => {
-        logger.error('room creation or room joining failed:%o', error)
 
-        reject(error)
-      })
+        const eventNotificationUri = notificationUris.get(roomId);
+        const joinNotificationData = {
+          peerId,
+          event: 'peer-joined',
+        };
+        await sendNotification(eventNotificationUri, joinNotificationData);
+    })
+    .catch((error) => {
+      logger.error('room creation or room joining failed:%o', error)
+
+      reject(error)
+    })
   })
 }
 
@@ -520,7 +608,7 @@ function getMediasoupWorker() {
 /**
  * Get a Room instance (or create one if it does not exist).
  */
-async function getOrCreateRoom({ roomId, consumerReplicas }) {
+async function getOrCreateRoom({ roomId, consumerReplicas, maxPeerCount }) {
   let room = rooms.get(roomId)
 
   // If the Room does not exist create a new one.
@@ -529,7 +617,7 @@ async function getOrCreateRoom({ roomId, consumerReplicas }) {
 
     const mediasoupWorker = getMediasoupWorker()
 
-    room = await Room.create({ mediasoupWorker, roomId, consumerReplicas })
+    room = await Room.create({ mediasoupWorker, roomId, consumerReplicas, maxPeerCount })
 
     rooms.set(roomId, room)
     room.on('close', () => rooms.delete(roomId))
