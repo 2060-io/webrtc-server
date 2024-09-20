@@ -48,8 +48,8 @@ After starting the service, you can access the application app at:
 - Description: Connects to a Mediasoup WebRTC server and plays the video specified by DEFAULT_VIDEO_SRC_URL.
 - Parameters:
     - ws_url: The WebSocket URL to connect to the Mediasoup server. (Required)
-    - success_url: URL to notify when the video finishes successfully. (Required)
-    - failure_url: URL to notify if an error occurs. (Required)
+    - success_url: URL to notify when the video finishes successfully. (Optional)
+    - failure_url: URL to notify if an error occurs. (Optional)
 - Notifications:The service sends PUT requests to the specified success_url or failure_url after the video finishes playing or if an error occurs.
 
 

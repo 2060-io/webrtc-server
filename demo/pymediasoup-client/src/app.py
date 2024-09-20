@@ -29,10 +29,6 @@ def join_call():
 
     if not ws_url:
         return jsonify(error="ws_url parameter is required"), 400
-    if not success_url:
-        return jsonify(error="success_url parameter is required"), 400
-    if not failure_url:
-        return jsonify(error="failure_url parameter is required"), 400
 
     time = get_video_duration(DEFAULT_VIDEO_SRC_URL)
 

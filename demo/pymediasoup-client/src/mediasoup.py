@@ -143,7 +143,8 @@ class Demo:
         try:
             return await asyncio.wait_for(fut, timeout=timeout, **kwargs)
         except asyncio.TimeoutError:
-            raise Exception("Operation timed out")
+            print("Operation timed out")
+            return
 
     async def _send_request(self, request):
         self._answers[request["id"]] = self._loop.create_future()
@@ -467,17 +468,17 @@ if __name__ == "__main__":
     parser.add_argument("--wsurl", help="WebSocket URL to connect to Mediasoup server", nargs="?")
     args = parser.parse_args()
 
-    # Mostrar los argumentos recibidos
+    # Show received args
     print('****args:', args)
 
-    # Generar roomId si no se proporciona
+    # Generate roomId if not provided
     if not args.room:
         args.room = secrets.token_urlsafe(8).lower()
 
-    # Generar peerId
+    # Generate peer id
     peerId = secrets.token_urlsafe(8).lower()
 
-    # Usar wsurl si se proporciona, de lo contrario construir la uri
+    # Use wsurl if provided. Otherwise construct URI from default dev demo server
     if not args.wsurl:
         uri = f"wss://dts-webrtc.dev.2060.io:443/?roomId={args.room}&peerId={peerId}"
     else:

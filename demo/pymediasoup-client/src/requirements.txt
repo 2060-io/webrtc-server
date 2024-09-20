@@ -3,4 +3,3 @@ websockets
 aiortc
 pymediasoup
 requests
-pypatch
