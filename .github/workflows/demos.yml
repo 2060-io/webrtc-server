@@ -1,0 +1,33 @@
+name: Continuous Deployment - Demos
+
+on:
+  workflow_dispatch:
+    inputs:
+      image-tag:
+        type: string
+        description: Tag for the image to be published (e.g. 'dev', 'latest', 'v1.0')
+env:
+  DH_USERNAME: ${{secrets.DOCKER_HUB_LOGIN}}
+  DH_TOKEN: ${{secrets.DOCKER_HUB_PWD}}
+jobs:
+  build-and-push-pymediasoup-client:
+    name: Build and push Pymediasoup client docker image
+    runs-on: ubuntu-latest
+    env:
+      IMAGE_NAME: 'webrtc-pymediasoup-client-demo'
+      IMAGE_TAG: ${{ github.event.inputs.image-tag }}
+    steps:
+      - name: Checkout webrtc-server
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        run: |
+          echo "$DH_TOKEN" | docker login -u "$DH_USERNAME" --password-stdin
+
+      - name: Build Docker image
+        run: |
+          docker build -f demo/pymediasoup-client/Dockerfile -t $DH_USERNAME/$IMAGE_NAME:$IMAGE_TAG ./demo/pymediasoup-client
+ 
+      - name: Add tags to Docker image and push to Docker Hub
+        run: |
+          docker push $DH_USERNAME/$IMAGE_NAME:$IMAGE_TAG
