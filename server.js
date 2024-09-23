@@ -186,10 +186,10 @@ expressApp.post('/rooms/:roomId?', validateCreateRoomParams, async (req, res) =>
   // Host or Ip where try connect ws
   const announcedIp = config.https.ingressHost
   // Ws url to response
-  const wsUrl = `wss://${announcedIp}:${port}?roomId=${roomIdToUse}`
+  const wsUrl = `wss://${announcedIp}:${port}`
 
   try {
-    // Check if roomId already exists in notificationsUris
+    // Check if roomId already exists in notificationUris
     if (notificationUris.has(roomIdToUse)) {
       throw new Error(`Room with roomId ${roomIdToUse} already exists.`);
     }
@@ -198,11 +198,13 @@ expressApp.post('/rooms/:roomId?', validateCreateRoomParams, async (req, res) =>
     await getOrCreateRoom({ roomId: roomIdToUse, consumerReplicas: 0, maxPeerCount });
     
     // Store the eventNotificationUri associated with the roomId
-    notificationsUris.set(roomIdToUse, eventNotificationUri);
+    notificationUris.set(roomIdToUse, eventNotificationUri);
+    
 
     const data = {
-      roomId:roomIdToUse ,
+      protocol: '2060-mediasoup-v1',
       wsUrl,
+      roomId:roomIdToUse 
     };
 
     // Return success response
