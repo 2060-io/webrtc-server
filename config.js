@@ -23,7 +23,7 @@ module.exports = {
     },
     ingressHost: process.env.MEDIASOUP_INGRESS_HOST,
   },
-  //IceServer config
+  //IceServer config deprecated
   iceserver: {
     enableIceServer: process.env.MEDIASOUP_CLIENT_ENABLE_ICESERVER || 'true',
     iceServerHost: process.env.MEDIASOUP_CLIENT_ICESERVER_HOST || 'localhost',
@@ -32,6 +32,13 @@ module.exports = {
     iceServerUser: process.env.MEDIASOUP_CLIENT_ICESERVER_USER || '',
     iceServerPass: process.env.MEDIASOUP_CLIENT_ICESERVER_PASS || '',
   },
+  iceServers: [
+    {
+      urls: `turn:${process.env.MEDIASOUP_CLIENT_ICESERVER_HOST}:${process.env.MEDIASOUP_CLIENT_ICESERVER_PORT}?transport=${process.env.MEDIASOUP_CLIENT_ICESERVER_PROTO}`,
+      username: process.env.MEDIASOUP_CLIENT_ICESERVER_USER,
+      credential: process.env.MEDIASOUP_CLIENT_ICESERVER_PASS
+    }
+  ],
   // mediasoup settings.
   mediasoup: {
     // Number of mediasoup workers to launch.
