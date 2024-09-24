@@ -169,10 +169,15 @@ This endpoint is used to create a new room or use an existing room based on the 
 
 ```json
 {
+  "protocol": "2060-mediasoup-v1",
+  "wsUrl": "wss://localhost:443",
   "roomId": "12345abcde",
-  "wsUrl": "wss://localhost:443?roomId=12345abcde"
 }
 ```
+**Note:** With the response obtained, the client must add the necessary parameters to complete the connection.. example `wss://localhost:443/?roomId=12345abcde&peerId=4321` or `wss://localhost:443/?roomId=12345abcde`
+
+
+
 #### Error
 
 - Status Code: 500 (Internal Server Error)
