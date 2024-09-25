@@ -48,16 +48,6 @@ class Demo:
         self._websocket = None
         self._device = None
 
-        # ice Server
-
-        self.ice_servers = [
-            RTCIceServer(
-                urls='turn:148.113.140.112:3479?transport=udp',
-                username='mobiera',
-                credential='L971EHmpPe'
-            )
-        ]
-
         self._tracks = []
 
         
@@ -219,8 +209,7 @@ class Demo:
             iceCandidates=ans["data"]["iceCandidates"],
             dtlsParameters=ans["data"]["dtlsParameters"],
             sctpParameters=ans["data"]["sctpParameters"],
-            iceServers=self.ice_servers,
-            #iceTransportPolicy='relay'
+            iceServers=ans["data"]["iceServers"]
         )
 
         @self._sendTransport.on("connect")
@@ -384,8 +373,7 @@ class Demo:
             iceCandidates=ans["data"]["iceCandidates"],
             dtlsParameters=ans["data"]["dtlsParameters"],
             sctpParameters=ans["data"]["sctpParameters"],
-            iceServers=self.ice_servers,
-            #iceTransportPolicy='relay'
+            iceServers=ans["data"]["iceServers"]
         )
 
         @self._recvTransport.on("connect")

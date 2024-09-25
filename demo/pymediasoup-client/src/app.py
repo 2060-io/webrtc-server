@@ -19,11 +19,16 @@ app = Flask(__name__)
 
 # Environment variable for default video source URL
 DEFAULT_VIDEO_SRC_URL = os.getenv('DEFAULT_VIDEO_SRC_URL', 'https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4')
+PORT= os.getenv('PORT',5000)
 
-def run_demo(ws_url, success_url, failure_url, video_duration):
+def run_demo(ws_url, success_url, failure_url):
     player = MediaPlayer(DEFAULT_VIDEO_SRC_URL)
     recorder = MediaBlackhole()
     
+    video_duration = get_video_duration(DEFAULT_VIDEO_SRC_URL)
+
+    print('*** video duration: ', video_duration)
+
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     
@@ -54,15 +59,13 @@ def join_call():
     if not ws_url:
         return jsonify(error="ws_url parameter is required"), 400
 
-    video_duration = get_video_duration(DEFAULT_VIDEO_SRC_URL)
-
-    print('*** video duration: ', video_duration)
+   
     
     # Run demo in a separate thread
-    thread = threading.Thread(target=run_demo, args=(ws_url, success_url, failure_url, video_duration))
+    thread = threading.Thread(target=run_demo, args=(ws_url, success_url, failure_url))
     thread.start()
     
     return jsonify(status="success"), 200
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=PORT)
