@@ -162,6 +162,23 @@ This endpoint is used to create a new room or use an existing room based on the 
 }
 ```
 
+#### Parameters (all optional)
+
+- `roomId`: It allows you to send the code for a room that needs to be created. If no code is sent, the endpoint will automatically create one, which will be returned by the method. 
+
+- `eventNotificationUri`: Enable the sending of notifications when a peer joins or leaves the room, The responses that the configured endpoint will receive are the following:
+
+```json
+{
+  "roomId": "12345678",
+  "peerId": "peerId1234",
+  "event": "peer-joined" || "peer-left",
+}
+```
+
+- `maxPeerCount`: Allows set the maximum number of allowed participants into the room 
+
+
 #### Response
 
 - Status Code: 200 (OK)
@@ -176,8 +193,6 @@ This endpoint is used to create a new room or use an existing room based on the 
 ```
 **Note:** With the response obtained, the client must add the necessary parameters to complete the connection.. example `wss://localhost:443/?roomId=12345abcde&peerId=4321` or `wss://localhost:443/?roomId=12345abcde`
 
-
-
 #### Error
 
 - Status Code: 500 (Internal Server Error)
@@ -188,6 +203,7 @@ This endpoint is used to create a new room or use an existing room based on the 
   "error": "Room with roomId 12345abcde already exists."
 }
 ```
+
 
 ### Config
 
