@@ -29,6 +29,7 @@ const Docker = require('dockerode')
 const logger = new Logger()
 const randomString = require('random-string')
 const { validateCreateRoomParams } = require('./lib/middlewares');
+const { sendNotification } = require('./lib/handlerNotification');
 
 // Async queue to manage rooms.
 // @type {AwaitQueue}
@@ -175,7 +176,7 @@ async function createExpressApp() {
   })
 
 
-expressApp.post('/rooms/:roomId?', validateCreateRoomParams, async (req, res) => {
+expressApp.post('/rooms/:roomId?',validateCreateRoomParams, async (req, res) => {
   const { eventNotificationUri, maxPeerCount } = req.body;
   const roomId = req.params.roomId;
 
@@ -210,9 +211,9 @@ expressApp.post('/rooms/:roomId?', validateCreateRoomParams, async (req, res) =>
     // Return success response
     res.status(200).json(data);
   } catch (error) {
-    console.error('Error creating room:', error);
+    logger.error('Error creating room:', error.message);
     // Return error response
-    res.status(500).json({ error: 'Error creating room' });
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -490,27 +491,6 @@ async function runHttpsServer() {
 }
 
 /**
- * Sends a notification to a specified URI when a peer joins or leaves the roomId.
- * 
- * @param {string} eventNotificationUri - The URI to which the notification will be sent.
- * @param {Object} notificationData - The data to be sent as the body of the POST request.
- * @param {string} notificationData.peerId - The ID of the peer involved in the event.
- * @param {string} notificationData.event - The type of event ('peer-joined' or 'peer-left').
- */
-async function sendNotification(eventNotificationUri, notificationData) {
-  if (eventNotificationUri) {
-    const url = notificationUris.get(eventNotificationUri);
-    try {
-      const response = await axios.post(url, notificationData);
-      logger.info(`Notification sent to ${eventNotificationUri}: ${response.status}`);
-    } catch (error) {
-      logger.error(`Failed to send notification to ${eventNotificationUri}:`, error);
-    }
-  }
-}
-
-
-/**
  * Create a protoo WebSocketServer to allow WebSocket connections from browsers.
  */
 async function runProtooWebSocketServer() {
@@ -553,44 +533,31 @@ async function runProtooWebSocketServer() {
       info.origin
     )
 
-    peerId.on('close',async () => {
-        logger.info(`Peer ${peerId} has disconnected from room ${roomId}`);
-        const eventNotificationUri = notificationUris.get(roomId);
-        const leaveNotificationData = {
-            peerId,
-            event: 'peer-left',
-        };
-        await sendNotification(eventNotificationUri, leaveNotificationData);
-    })
-
+    
     // Serialize this code into the queue to avoid that two peers connecting at
     // the same time with the same roomId create two separate rooms with same
     // roomId.
     queue
       .push(async () => {
         const room = await getOrCreateRoom({ roomId, consumerReplicas })
-
-        // Check if the room has reached the maxPeerCount limit
-        if (room.peers.size >= room.maxPeerCount) {
-          reject(403, 'Room is full, cannot accept more peers');
-          return;
-        }
-
+       
         // Accept the protoo WebSocket connection.
         const protooWebSocketTransport = accept()
-
-        room.handleProtooConnection({ peerId, protooWebSocketTransport })
-
         const eventNotificationUri = notificationUris.get(roomId);
+        room.handleProtooConnection({ peerId, protooWebSocketTransport, eventNotificationUri })
+
+        //send notification to eventNotificationUri
+        
         const joinNotificationData = {
+          roomId,
           peerId,
           event: 'peer-joined',
         };
         await sendNotification(eventNotificationUri, joinNotificationData);
+
     })
     .catch((error) => {
       logger.error('room creation or room joining failed:%o', error)
-
       reject(error)
     })
   })
