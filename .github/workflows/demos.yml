@@ -31,3 +31,19 @@ jobs:
       - name: Add tags to Docker image and push to Docker Hub
         run: |
           docker push $DH_USERNAME/$IMAGE_NAME:$IMAGE_TAG
+
+  build-and-push-webclient:
+    name: Build and push WebClient Mediasoup docker image
+    runs-on: ubuntu-latest
+    env:
+      IMAGE_NAME: webrtc-webclient
+      IMAGE_TAG: ${{ github.event.inputs.image-tag }}
+    steps:
+      - name: Checkout WebClient Mediasoup
+        uses: actions/checkout@v4
+      - name: Log in to Docker Hub
+        run: echo "$DH_TOKEN" | docker login -u "$DH_USERNAME" --password-stdin
+      - name: Build Docker image
+        run: docker build -f demo/webclient/Dockerfile -t $DH_USERNAME/$IMAGE_NAME:$IMAGE_TAG ./demo/webclient
+      - name: Add tags to Docker image and push to Docker Hub
+        run: docker push $DH_USERNAME/$IMAGE_NAME:$IMAGE_TAG

@@ -7,19 +7,19 @@ For this version, the `RoomClient` module has been refactored to fetch the Media
 
 ## Prerequisites
 
-To run this client, you need an online Mediasoup server with ICE parameters configured. Make sure the server's `config.js` file includes the following settings:
+To run this client with iceServer, you need an online `Mediasoup Server` with ICE parameters configured. Make sure the server's `config.js` file includes the following settings:
 
 ```javascript
-iceServer: {
-    enableIceServer: process.env.MEDIASOUP_CLIENT_ENABLE_ICESERVER || 'true',
-},
-iceServers: [
+"iceserver": {
+    "enableIceServer": "yes"
+  },
+  "iceServers": [
     {
-      urls: `turn:${process.env.MEDIASOUP_CLIENT_ICESERVER_HOST}:${process.env.MEDIASOUP_CLIENT_ICESERVER_PORT}?transport=${process.env.MEDIASOUP_CLIENT_ICESERVER_PROTO}`,
-      username: process.env.MEDIASOUP_CLIENT_ICESERVER_USER,
-      credential: process.env.MEDIASOUP_CLIENT_ICESERVER_PASS,
+      "urls": "turn:localhost:3478?transport=udp",
+      "username": "test",
+      "credential": "test123"
     }
-],
+  ],
 ```
 
 ## Building with Docker
