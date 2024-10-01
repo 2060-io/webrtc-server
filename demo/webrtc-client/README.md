@@ -36,7 +36,7 @@ iceServers: [
 
 3. Build the Docker image:
    ```bash
-   docker build --no-cache -t webclient-webrtc:dev .
+   docker build --no-cache -t webrtc-webclient:dev .
    ```
 
 ## Running with Docker
