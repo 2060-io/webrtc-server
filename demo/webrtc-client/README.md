@@ -67,7 +67,7 @@ openssl req -new -key privkey.pem -out request.csr
 openssl x509 -req -in request.csr -signkey privkey.pem -out fullchain.pem
 ```
 
-## Testing the WebRTC Client
+## Testing the WebRTC Web Client
 
 1. Open your browser and navigate to the following URL:
 
