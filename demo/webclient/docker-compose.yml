@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  webrtc-client:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "443:443"
+    volumes:
+      - ./certs/fullchain.pem:/etc/ssl/certs/fullchain.pem
+      - ./certs/privkey.pem:/etc/ssl/private/privkey.pem
+      - ./config/nginx.conf:/etc/nginx/nginx.conf
+      - ./config/default.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - webrtc-network
+
+networks:
+  webrtc-network:
+    driver: bridge
