@@ -270,12 +270,12 @@ Retrieve ICE Server settings via a peer websocket request to create a WebRTC Tra
 
 ## Protocol Documentation Webrtc-Server 
 
-For detailed information on Mediasoup Server protocol and request methods, check out the [Mediasoup Server Protocol Guide](./docs/README_Mediasoup_Server_Protocol.md).
+For detailed information on Mediasoup Server protocol and request methods, check out the [Mediasoup Server Protocol Guide](./docs/mediasoup-server-protocol.md).
 
 
 ## WebRTC Client Setup Documentation
 
-For detailed instructions on setting up a WebRTC client using Mediasoup, including JavaScript and Python examples, check out the [WebRTC Client Setup Guide](./demo/README_WebRTC_Client_Setup.md).
+For detailed instructions on setting up a WebRTC client using Mediasoup, including JavaScript and Python examples, check out the [WebRTC Client Setup Guide](./docs/webrtc-client-setup-guide.md).
 
 
 
