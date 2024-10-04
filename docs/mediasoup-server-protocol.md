@@ -80,7 +80,6 @@ A **consumer** in Mediasoup is an entity that receives media from a producer. Co
    **Example**:
    ```javascript
    const capabilities = await socket.request('getRouterRtpCapabilities');
-   console.log(capabilities);
    ```
 
 ### 2. **join**
@@ -98,7 +97,7 @@ A **consumer** in Mediasoup is an entity that receives media from a producer. Co
 
 ### 3. **createWebRtcTransport**
    - **Purpose**: Creates a WebRTC transport for sending or receiving media.
-   - **Usage****: Establishes transport necessary for WebRTC media streams.
+   - **Usage**: Establishes transport necessary for WebRTC media streams.
    
    **Example**:
    ```javascript
@@ -224,19 +223,16 @@ A **consumer** in Mediasoup is an entity that receives media from a producer. Co
    **Example** (Transport Stats):
    ```javascript
    const stats = await socket.request('getTransportStats', { transportId: transport.id });
-   console.log(stats);
    ```
 
    **Example** (Producer Stats):
    ```javascript
    const producerStats = await socket.request('getProducerStats', { producerId: producer.id });
-   console.log(producerStats);
    ```
 
    **Example** (Consumer Stats):
    ```javascript
    const consumerStats = await socket.request('getConsumerStats', { consumerId: consumer.id });
-   console.log(consumerStats);
    ```
 
 ---

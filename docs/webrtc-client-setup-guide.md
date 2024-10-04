@@ -17,7 +17,7 @@ based on implementations in both JavaScript (using mediasoup-client) and Python 
 - WebSocket server for signaling
 
 ### Server Requirements
-- Mediasoup Server
+- Webrtc-server V 1.0.0
 - WebSocket Server for signaling (e.g., protoo server)
 
 ---
