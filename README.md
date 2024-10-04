@@ -21,6 +21,8 @@ You can deploy it using Docker or Kubernetes, with integration of the [Coturn](h
     - [Config](#config)
     - [Other Server Mediasoup Endpoints](#other-server-mediasoup-endpoints)
   - [ICE Server Configuration](#ice-server-configuration)
+  - [Protocol Documentation Webrtc-Server](#protocol-documentation-webrtc-server)
+  - [WebRTC Client Setup Documentation](#webrtc-client-setup-documentation)
 
 ## Pre-requisites
 
@@ -265,3 +267,15 @@ Retrieve ICE Server settings via a peer websocket request to create a WebRTC Tra
   }
 }
 ```
+
+## Protocol Documentation Webrtc-Server 
+
+For detailed information on Mediasoup Server protocol and request methods, check out the [Mediasoup Server Protocol Guide](./docs/mediasoup-server-protocol.md).
+
+
+## WebRTC Client Setup Documentation
+
+For detailed instructions on setting up a WebRTC client using Mediasoup, including JavaScript and Python examples, check out the [WebRTC Client Setup Guide](./docs/webrtc-client-setup-guide.md).
+
+
+
