@@ -323,6 +323,30 @@ Make sure to replace `your-signaling-server-url` with your actual WebSocket sign
 
 ---
 
+## Client Websocket Request Added
+
+
+#### **Sending the `leaveCall` Request**
+
+```javascript
+await ws.request('leaveCall');
+```
+
+#### **Listening for the `peerLeaveCall` Notification**
+
+```javascript
+socket.on('peerLeaveCall', ({ peerId }) => {
+  console.log(`Peer ${peerId} has leave the call`);
+  // Update the UI to reflect the departure
+});
+```
+
+This ensures that all participants are informed when a peer leaves, and the UI can be updated accordingly.
+
+---
+
+With this method, the Mediasoup server ensures efficient handling of call termination scenarios and provides a seamless experience for all peers.
+
 ## Conclusion
 
 By following this guide, you will have a fully functional WebRTC client implemented in both JavaScript and Python, 
