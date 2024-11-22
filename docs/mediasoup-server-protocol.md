@@ -290,7 +290,7 @@ await socket.request('leaveCall');
 
 **Details**:
 
-- **Notification to Peers**: Other peers in the room are notified via the `peerLeaveCall` event.
+- **Notification to Peers**: Other peers in the room are notified via the `peerLeft` event.
 - **Resource Cleanup**: Cleans up all server-side resources (e.g., transports, producers, consumers) associated with the peer.
 - **Room Closure**: If the last peer leaves the room, the server automatically closes it.
 
