@@ -329,7 +329,7 @@ Make sure to replace `your-signaling-server-url` with your actual WebSocket sign
 #### **Sending the `leaveCall` Request**
 
 ```javascript
-await ws.request('leaveCall');
+await ws.request('leaveRoom');
 ```
 
 #### **Listening for the `peerLeaveCall` Notification**
