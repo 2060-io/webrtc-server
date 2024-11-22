@@ -326,7 +326,7 @@ Make sure to replace `your-signaling-server-url` with your actual WebSocket sign
 ## Client Websocket Request Added
 
 
-#### **Sending the `leaveCall` Request**
+#### **Sending the `leaveRoom` Request**
 
 ```javascript
 await ws.request('leaveRoom');
