@@ -285,7 +285,7 @@ const consumerStats = await socket.request('getConsumerStats', { consumerId: con
 **Example**:
 
 ```javascript
-await socket.request('leaveCall');
+await socket.request('leaveRoom');
 ```
 
 **Details**:
