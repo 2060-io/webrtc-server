@@ -332,7 +332,7 @@ Make sure to replace `your-signaling-server-url` with your actual WebSocket sign
 await ws.request('leaveRoom');
 ```
 
-#### **Listening for the `peerLeaveCall` Notification**
+#### **Listening for the `peerLeft` Notification**
 
 ```javascript
 socket.on('peerLeft', ({ peerId }) => {
