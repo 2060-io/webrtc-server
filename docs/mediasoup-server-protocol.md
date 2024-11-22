@@ -277,7 +277,7 @@ const producerStats = await socket.request('getProducerStats', { producerId: pro
 const consumerStats = await socket.request('getConsumerStats', { consumerId: consumer.id });
 ```
 
-### 15. **leaveCall**
+### 15. **leaveRoom**
 
 - **Purpose**: Allows a peer to notify the server when leaving a call, ensuring resource cleanup and notifying other peers in the room.
 - **Usage**: Sends a signal to the server to terminate the peer's session and triggers notifications to other participants.
