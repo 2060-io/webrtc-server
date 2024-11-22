@@ -335,7 +335,7 @@ await ws.request('leaveCall');
 #### **Listening for the `peerLeaveCall` Notification**
 
 ```javascript
-socket.on('peerLeaveCall', ({ peerId }) => {
+socket.on('peerLeft', ({ peerId }) => {
   console.log(`Peer ${peerId} has leave the call`);
   // Update the UI to reflect the departure
 });
