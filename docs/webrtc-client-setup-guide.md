@@ -336,7 +336,7 @@ await ws.request('leaveRoom');
 
 ```javascript
 socket.on('peerLeft', ({ peerId }) => {
-  console.log(`Peer ${peerId} has leave the call`);
+  console.log(`Peer ${peerId} has left the room`);
   // Update the UI to reflect the departure
 });
 ```
