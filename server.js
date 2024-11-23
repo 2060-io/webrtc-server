@@ -153,6 +153,8 @@ async function createExpressApp() {
 
   expressApp = express()
 
+  expressApp.set('case sensitive routing', true);
+
   expressApp.use(express.static('public'))
 
   expressApp.use(bodyParser.json())
