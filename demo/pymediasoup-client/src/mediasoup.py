@@ -117,7 +117,12 @@ class Demo:
                             }
                             await self._websocket.send(json.dumps(response))
                     elif message.get("notification"):
-                        print(message)
+                        if message.get("method") == "peerLeft":
+                            peer_id = message["data"]["peerId"]
+                            print(f"Peer {peer_id} has left the call.")
+                            self.close()
+                        else:
+                            print(message)
             except websockets.ConnectionClosedOK:
                 # Handle the normal closure of the WebSocket
                 print("WebSocket connection closed normally.")
@@ -160,8 +165,7 @@ class Demo:
         await self.createRecvTransport()
         await self.produce()
 
-        task_run_recv_msg.cancel
-        await self.close()
+        await self.leaveRoom()
 
     async def load(self):
         # Init device
@@ -435,7 +439,7 @@ class Demo:
             await producer.close()
         for task in self._tasks:
             print('close task')
-            task.cancel()
+            await task.cancel()
         if self._sendTransport:
             print('close _sendTransport')
             await self._sendTransport.close()
@@ -446,7 +450,31 @@ class Demo:
         await self._websocket.close()
         await self._recorder.stop()
 
+    async def leaveRoom(self):
+        try:
+            print('**** Initialize leaveRoom method ****')
+            # Generate a unique request ID
+            reqId = self.generateRandomNumber()
 
+            # Create the leaveCall request
+            req = {
+                "request": True,
+                "id": reqId,
+                "method": "leaveRoom",
+                "data": {}
+            }
+
+            # Send the request to the server
+            await self._send_request(req)
+            
+            # Wait for the server response
+            ans = await self._wait_for(self._answers[reqId], timeout=15)
+
+            await self._websocket.close()
+
+        except Exception as e:
+            print(f"Error in leaveRoom: {e}")
+            
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="PyMediaSoup")
