@@ -496,7 +496,7 @@ if __name__ == "__main__":
 
     # Use wsurl if provided. Otherwise construct URI from default dev demo server
     if not args.wsurl:
-        uri = f"wss://webrtc.dev.2060.io:443/?roomId={args.room}&peerId={peerId}"
+        uri = f"wss://dts-webrtc.dev.2060.io:443/?roomId={args.room}&peerId={peerId}"
     else:
         uri = args.wsurl
 
