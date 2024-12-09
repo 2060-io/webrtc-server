@@ -146,7 +146,7 @@ MEDIASOUP_INGRESS_HOST='localhost'
 }
 ```
 
-### Create Rooms 
+### Create Rooms
 
 This endpoint is used to create a new room or use an existing room based on the provided or generated `roomId`. It returns the WebSocket URL and the `roomId` used, and checks for unique room identifiers before proceeding.
 
@@ -166,7 +166,7 @@ This endpoint is used to create a new room or use an existing room based on the 
 
 #### Parameters (all optional)
 
-- `roomId`: It allows you to send the code for a room that needs to be created. If no code is sent, the endpoint will automatically create one, which will be returned by the method. 
+- `roomId`: It allows you to send the code for a room that needs to be created. If no code is sent, the endpoint will automatically create one, which will be returned by the method.
 
 - `eventNotificationUri`: Enable the sending of notifications when a peer joins or leaves the room, The responses that the configured endpoint will receive are the following:
 
@@ -178,8 +178,7 @@ This endpoint is used to create a new room or use an existing room based on the 
 }
 ```
 
-- `maxPeerCount`: Allows set the maximum number of allowed participants into the room 
-
+- `maxPeerCount`: Allows set the maximum number of allowed participants into the room
 
 #### Response
 
@@ -190,9 +189,10 @@ This endpoint is used to create a new room or use an existing room based on the 
 {
   "protocol": "2060-mediasoup-v1",
   "wsUrl": "wss://localhost:443",
-  "roomId": "12345abcde",
+  "roomId": "12345abcde"
 }
 ```
+
 **Note:** With the response obtained, the client must add the necessary parameters to complete the connection.. example `wss://localhost:443/?roomId=12345abcde&peerId=4321` or `wss://localhost:443/?roomId=12345abcde`
 
 #### Error
@@ -205,7 +205,6 @@ This endpoint is used to create a new room or use an existing room based on the 
   "error": "Room with roomId 12345abcde already exists."
 }
 ```
-
 
 ### Config
 
@@ -268,14 +267,10 @@ Retrieve ICE Server settings via a peer websocket request to create a WebRTC Tra
 }
 ```
 
-## Protocol Documentation Webrtc-Server 
+## Protocol Documentation Webrtc-Server
 
 For detailed information on Mediasoup Server protocol and request methods, check out the [Mediasoup Server Protocol Guide](./docs/mediasoup-server-protocol.md).
-
 
 ## WebRTC Client Setup Documentation
 
 For detailed instructions on setting up a WebRTC client using Mediasoup, including JavaScript and Python examples, check out the [WebRTC Client Setup Guide](./docs/webrtc-client-setup-guide.md).
-
-
-
