@@ -6,6 +6,8 @@ import {
   HttpStatus,
   NotFoundException,
   BadRequestException,
+  OnModuleDestroy,
+  OnModuleInit,
 } from '@nestjs/common'
 import * as mediasoup from 'mediasoup'
 import { Room } from '../lib/Room'
@@ -19,16 +21,116 @@ import {
   CreateBroadcasterTransportDto,
 } from './dto/rooms.dto'
 
+import * as protoo from 'protoo-server'
+import * as url from 'url'
+import { Server } from 'http'
+import { NotificationService } from 'src/lib/notification.service'
+
 @Injectable()
-export class RoomsService {
+export class RoomsService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(RoomsService.name)
-  private readonly rooms = new Map<string, Room>()
   private readonly mediasoupWorkers: mediasoup.types.Worker[] = []
   private nextMediasoupWorkerIdx = 0
+  private readonly rooms = new Map<string, Room>()
   private readonly notificationUris = new Map<string, string>()
+  private readonly notificationService: NotificationService
+
+  private protooServer: protoo.WebSocketServer
+  private httpServer: Server
 
   constructor() {
+    this.notificationService = new NotificationService()
+    this.httpServer = Reflect.get(global, 'httpServer')
     this.initializeMediasoupWorkers()
+  }
+  async onModuleInit(): Promise<void> {
+    this.logger.log('[Protoo-server] WebSocket initializing.')
+
+    this.initServer()
+
+    this.logger.log('[Protoo-server] WebSocket initialized.')
+
+    //Handle connections from clients
+    this.protooServer.on('connectionrequest', (info, accept, reject) => {
+      this.logger.log(`[Protoo-server] *** connectionrequest Listener ***`)
+      const wsurl = url.parse(info.request.url, true)
+      const roomId = wsurl.query['roomId'] as string
+      const peerId = wsurl.query['peerId'] as string
+
+      if (!roomId || !peerId) {
+        this.logger.warn(`Missing roomId or peerId. Rejecting connection.`)
+        reject(400, 'Missing roomId or peerId')
+        return
+      }
+
+      this.logger.log(
+        `protoo connection request [roomId:${roomId}, peerId:${peerId}, address:${info.socket.remoteAddress}, origin:${info.origin}]`,
+      )
+
+      this.handleConnection(roomId, peerId, accept)
+        .then(() => {
+          this.logger.log(`Peer connected [roomId:${roomId}, peerId:${peerId}]`)
+        })
+        .catch((error) => {
+          this.logger.error(`Failed to handle connection [roomId:${roomId}, peerId:${peerId}]: ${error.message}`)
+          reject(500, error.message)
+        })
+    })
+  }
+
+  onModuleDestroy() {
+    throw new Error('Method not implemented.')
+  }
+
+  /**
+   * Initializes the WebSocket server with specific configurations.
+   * Sets up the server to listen on the specified port and defines a custom error.
+   */
+  private initServer(): void {
+    try {
+      if (!this.httpServer) {
+        this.logger.error(`HTTP server not found. Ensure it is set in main.ts.`)
+        throw new Error(`HTTP server not found. Ensure it is set in main.ts.`)
+      }
+
+      // Initialize the protoo WebSocket server
+      this.protooServer = new protoo.WebSocketServer(this.httpServer, {
+        maxReceivedFrameSize: 960000,
+        maxReceivedMessageSize: 960000,
+        fragmentOutgoingMessages: true,
+        fragmentationThreshold: 960000,
+      })
+    } catch (error) {
+      this.logger.error('Error during Protoo server initialization', error.stack)
+      throw error
+    }
+  }
+
+  async handleConnection(roomId: string, peerId: string, accept: () => protoo.WebSocketTransport): Promise<void> {
+    let room = this.rooms.get(roomId)
+
+    if (!room) {
+      this.logger.log(`Creating new room: ${roomId}`)
+      //const mediasoupWorker = this.getNextMediasoupWorker()
+      //this.logger.debug(`*** Worker ${mediasoupWorker.pid} ***`)
+      room = await this.getOrCreateRoom({ roomId })
+      //await Room.create({ mediasoupWorker, roomId })
+      this.rooms.set(roomId, room)
+    }
+
+    //hardcode to initial test
+    const eventNotificationUri = this.notificationUris.get(roomId)
+    const transport = accept()
+    room.handleProtooConnection({ peerId, transport, eventNotificationUri })
+
+    //send notification to eventNotificationUri
+
+    const joinNotificationData = {
+      roomId,
+      peerId,
+      event: 'peer-joined',
+    }
+    await this.notificationService.sendNotification(eventNotificationUri, joinNotificationData)
   }
 
   /**
@@ -91,56 +193,42 @@ export class RoomsService {
    */
   async getOrCreateRoom(options: {
     roomId: string
-    force: boolean
+    force?: boolean
     eventNotificationUri?: string
     maxPeerCount?: number
   }): Promise<Room> {
-    const { roomId, force = false, eventNotificationUri, maxPeerCount = 10 } = options
+    const { roomId, force = false, eventNotificationUri, maxPeerCount } = options
 
     try {
       // Generate a random roomId if not provided
-      const roomIdToUse = roomId ?? this.generateRandomRoomId()
+      let room = this.rooms.get(roomId)
 
       // Check if the room already exists
-      if (this.rooms.has(roomIdToUse)) {
-        if (force) {
-          this.logger.log(`Recreating room [roomId:${roomIdToUse}]`)
-          const existingRoom = this.rooms.get(roomIdToUse)
-          existingRoom.close()
-          this.rooms.delete(roomIdToUse)
-        } else {
-          return this.rooms.get(roomIdToUse)
+      if (!room) {
+        this.logger.log(`[getOrCreateRoom] creating room [roomId:${roomId}]`)
+        const mediasoupWorker = this.getNextMediasoupWorker()
+        // Create the new room instance
+        const room = await Room.create({
+          mediasoupWorker,
+          roomId: roomId,
+          consumerReplicas: 0,
+          maxPeerCount,
+          mediaCodecs: config.mediasoup.routerOptions.mediaCodecs as mediasoup.types.RtpCodecCapability[],
+        })
+        // Store the room in the rooms map
+        this.rooms.set(roomId, room)
+        // Handle room closure
+        room.on('close', () => {
+          this.rooms.delete(roomId)
+          this.logger.log(`Room closed and removed [roomId:${roomId}]`)
+        })
+
+        // Log the event notification URI if provided
+        if (eventNotificationUri) {
+          this.logger.log(
+            `Room created with eventNotificationUri [roomId:${roomId}, eventNotificationUri:${eventNotificationUri}]`,
+          )
         }
-      }
-
-      this.logger.log(`Creating new room [roomId:${roomIdToUse}]`)
-
-      // Retrieve the next available Mediasoup worker
-      const worker = this.getNextMediasoupWorker()
-
-      // Create the new room instance
-      const room = await Room.create({
-        mediasoupWorker: worker,
-        roomId: roomIdToUse,
-        consumerReplicas: 1, // Adjust as per configuration
-        maxPeerCount,
-        mediaCodecs: config.mediasoup.routerOptions.mediaCodecs as mediasoup.types.RtpCodecCapability[],
-      })
-
-      // Store the room in the rooms map
-      this.rooms.set(roomIdToUse, room)
-
-      // Handle room closure
-      room.on('close', () => {
-        this.rooms.delete(roomIdToUse)
-        this.logger.log(`Room closed and removed [roomId:${roomIdToUse}]`)
-      })
-
-      // Log the event notification URI if provided
-      if (eventNotificationUri) {
-        this.logger.log(
-          `Room created with eventNotificationUri [roomId:${roomIdToUse}, eventNotificationUri:${eventNotificationUri}]`,
-        )
       }
 
       return room
@@ -193,7 +281,7 @@ export class RoomsService {
       }
 
       // Create or retrieve the room
-      await this.getOrCreateRoom({ roomId: roomIdToUse, force: false, eventNotificationUri, maxPeerCount })
+      await this.getOrCreateRoom({ roomId: roomIdToUse, eventNotificationUri, maxPeerCount })
 
       // Store the eventNotificationUri associated with the roomId
       if (eventNotificationUri) {
@@ -413,7 +501,7 @@ export class RoomsService {
     transportId: string,
     dataProducerId: string,
   ): Promise<any> {
-    const room = await this.getOrCreateRoom({ roomId, force: false })
+    const room = await this.getOrCreateRoom({ roomId })
     return room.createBroadcasterDataConsumer({
       broadcasterId,
       transportId,
@@ -436,7 +524,7 @@ export class RoomsService {
     transportId: string,
     dto: CreateBroadcasterDataProducerDto,
   ): Promise<any> {
-   const room = await this.getOrCreateRoom({ roomId, force: false })
+    const room = await this.getOrCreateRoom({ roomId })
     return room.createBroadcasterDataProducer({
       broadcasterId,
       transportId,

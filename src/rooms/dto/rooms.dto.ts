@@ -9,7 +9,7 @@ export class CreateRoomDto {
     required: false,
   })
   @IsOptional()
-  @IsUrl({}, { message: 'eventNotificationUri must be a valid URL' })
+  @IsUrl({ require_tld: false }, { message: 'eventNotificationUri must be a valid URL' })
   eventNotificationUri?: string
 
   @ApiProperty({

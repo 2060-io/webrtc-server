@@ -1,12 +1,19 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { HttpService } from '@nestjs/axios'
 import { firstValueFrom } from 'rxjs'
+import { AxiosInstance } from 'axios'
+import axios from 'axios'
 
 @Injectable()
 export class NotificationService {
   private readonly logger = new Logger(NotificationService.name)
+  private readonly httpService: HttpService
 
-  constructor(private readonly httpService: HttpService) {}
+  constructor() {
+    // Crear una instancia de HttpService utilizando AxiosInstance
+    const axiosInstance: AxiosInstance = axios.create()
+    this.httpService = new HttpService(axiosInstance)
+  }
 
   /**
    * Sends a notification to a specified URI when a peer joins or leaves the roomId.
@@ -16,7 +23,7 @@ export class NotificationService {
    * @param {string} notificationData.peerId - The ID of the peer involved in the event.
    * @param {string} notificationData.event - The type of event ('peer-joined' or 'peer-left').
    */
-  async sendNotification(
+  public async sendNotification(
     eventNotificationUri: string,
     notificationData: { peerId: string; event: string },
   ): Promise<void> {

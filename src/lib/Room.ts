@@ -1,14 +1,15 @@
 import { EventEmitter } from 'events'
 import * as protoo from 'protoo-server'
 import * as mediasoup from 'mediasoup'
-import { Logger } from '@nestjs/common'
+import { Injectable, Logger } from '@nestjs/common'
 import { NotificationService } from './notification.service'
-import { TransportAppData, BweTraceInfo } from 'src/websocket/interfaces/interfaces'
+import { TransportAppData, BweTraceInfo } from 'src/lib/room.interfaces'
 import { config } from 'src/config/config.server'
 import { Device } from 'src/rooms/interfaces/rooms.interfaces'
 import * as throttle from '@sitespeed.io/throttle'
 import { Producer } from 'mediasoup/node/lib/types'
-
+import { HttpService } from '@nestjs/axios'
+@Injectable()
 export class Room extends EventEmitter {
   private readonly logger = new Logger(Room.name)
   private readonly protooRoom: protoo.Room
@@ -41,9 +42,6 @@ export class Room extends EventEmitter {
   }): Promise<Room> {
     const protooRoom = new protoo.Room()
 
-    //Define mediaCodecs from config
-    //const mediaCodecs = config.mediasoup.routerOptions.mediaCodecs
-
     const mediasoupRouter = await mediasoupWorker.createRouter({ mediaCodecs })
 
     const audioLevelObserver = await mediasoupRouter.createAudioLevelObserver({
@@ -66,7 +64,7 @@ export class Room extends EventEmitter {
     })
   }
 
-  private constructor({
+  constructor({
     roomId,
     protooRoom,
     webRtcServer,
@@ -99,6 +97,7 @@ export class Room extends EventEmitter {
     this.maxPeerCount = maxPeerCount || 2
     this.webRtcServer = webRtcServer
     this.networkThrottled = false
+    this.notificationService = new NotificationService()
   }
 
   close(): void {
@@ -130,11 +129,12 @@ export class Room extends EventEmitter {
     eventNotificationUri,
   }: {
     peerId: string
-    consume: boolean
+    consume?: boolean
     transport: protoo.WebSocketTransport
     eventNotificationUri: string
   }): void {
     this.logger.debug(`*** [handleProtooConnection] Initialize ***`)
+
     if (this.closed) {
       transport.close()
       return
@@ -194,7 +194,7 @@ export class Room extends EventEmitter {
         event: 'peer-left',
       }
 
-      //await this.notificationService.sendNotification(eventNotificationUri, joinNotificationData)
+      await this.notificationService.sendNotification(eventNotificationUri, joinNotificationData)
 
       // If the Peer was joined, notify all Peers.
       if (peer.data.joined) {
