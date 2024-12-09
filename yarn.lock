@@ -4397,7 +4397,7 @@ prompts@^2.0.1:
     kleur "^3.0.3"
     sisteransi "^1.0.5"
 
-protoo-server@^4.0.6:
+protoo-server@^4.0.5:
   version "4.0.6"
   resolved "https://registry.yarnpkg.com/protoo-server/-/protoo-server-4.0.6.tgz#58d877a00417f4e135e1525250d2223800050c7d"
   integrity sha512-y5Ix5r0D6oCaajHJJisVrzRYPoG9IA5yxLQIhlnrWdhg89G5KEsDgTUNn4495cxShj9aPIl0Lxs5Sa3L5ElgGQ==

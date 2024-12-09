@@ -8,7 +8,6 @@ import { config } from 'src/config/config.server'
 import { Device } from 'src/rooms/interfaces/rooms.interfaces'
 import * as throttle from '@sitespeed.io/throttle'
 import { Producer } from 'mediasoup/node/lib/types'
-import { HttpService } from '@nestjs/axios'
 @Injectable()
 export class Room extends EventEmitter {
   private readonly logger = new Logger(Room.name)
@@ -131,7 +130,7 @@ export class Room extends EventEmitter {
     peerId: string
     consume?: boolean
     transport: protoo.WebSocketTransport
-    eventNotificationUri: string
+    eventNotificationUri?: string
   }): void {
     this.logger.debug(`*** [handleProtooConnection] Initialize ***`)
 
@@ -188,13 +187,15 @@ export class Room extends EventEmitter {
       this.logger.log(`protoo Peer "close" event [peerId: ${peer.id}]`)
 
       // send notification webhook if eventNotificationUri is defined
-      const joinNotificationData = {
-        roomId: this.roomId,
-        peerId: peer.id,
-        event: 'peer-left',
-      }
+      if (eventNotificationUri) {
+        const joinNotificationData = {
+          roomId: this.roomId,
+          peerId: peer.id,
+          event: 'peer-left',
+        }
 
-      await this.notificationService.sendNotification(eventNotificationUri, joinNotificationData)
+        await this.notificationService.sendNotification(eventNotificationUri, joinNotificationData)
+      }
 
       // If the Peer was joined, notify all Peers.
       if (peer.data.joined) {

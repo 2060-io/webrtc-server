@@ -10,7 +10,6 @@ export class NotificationService {
   private readonly httpService: HttpService
 
   constructor() {
-    // Crear una instancia de HttpService utilizando AxiosInstance
     const axiosInstance: AxiosInstance = axios.create()
     this.httpService = new HttpService(axiosInstance)
   }
@@ -30,12 +29,14 @@ export class NotificationService {
     if (eventNotificationUri) {
       try {
         const response = await firstValueFrom(this.httpService.post(eventNotificationUri, notificationData))
-        this.logger.log(`Notification sent to ${eventNotificationUri}: ${response.status}`)
+        this.logger.log(`[sendNotification] Notification sent to ${eventNotificationUri}: ${response.status}`)
       } catch (error) {
-        this.logger.error(`Failed to send notification to ${eventNotificationUri}:`, error.message)
+        this.logger.error(`[sendNotification] Failed to send notification to ${eventNotificationUri}: ${error.message}`)
       }
     } else {
-      this.logger.error('Failed to send notification: eventNotificationUri is not defined', notificationData)
+      this.logger.warn(
+        `[sendNotification] couldn't to send notification: eventNotificationUri is not defined: ${notificationData}`,
+      )
     }
   }
 }

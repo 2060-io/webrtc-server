@@ -2,12 +2,14 @@ import { NestFactory } from '@nestjs/core'
 import { AppModule } from './app.module'
 import { ConfigService } from '@nestjs/config'
 import { Logger, ValidationPipe, VersioningType } from '@nestjs/common'
-import { createServer } from 'http'
+import { createServer } from 'https'
 import { ExpressAdapter } from '@nestjs/platform-express'
 import { getLogLevels } from './config/logger.config'
 import * as express from 'express'
 import * as fs from 'fs'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
+
+import { config as configServer } from './config/config.server'
 
 async function bootstrap(): Promise<void> {
   const logger = new Logger('Bootstrap')
@@ -21,11 +23,17 @@ async function bootstrap(): Promise<void> {
   // Set case sensitive routing
   expressApp.set('case sensitive routing', true)
 
-  // Create the HTTP server using the Express instance
-  const httpServer = createServer(expressApp)
+  // Activate TLS
+  const httpsOptions = {
+    key: fs.readFileSync(configServer.https.tls.key),
+    cert: fs.readFileSync(configServer.https.tls.cert),
+  }
 
-  // Expose the HTTP server globally before initializing NestJS
-  Reflect.set(global, 'httpServer', httpServer)
+  // Create the HTTPS server using the Express instance
+  const httpsServer = createServer(httpsOptions, expressApp)
+
+  // Expose the HTTPS server globally before initializing NestJS
+  Reflect.set(global, 'httpServer', httpsServer)
 
   // Create the NestJS application with the Express adapter
   const app = await NestFactory.create(AppModule, new ExpressAdapter(expressApp), {
@@ -37,7 +45,7 @@ async function bootstrap(): Promise<void> {
   app.enableVersioning({ type: VersioningType.URI })
   app.enableCors()
 
-  //Validations DTO
+  // Validations DTO
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
@@ -47,10 +55,7 @@ async function bootstrap(): Promise<void> {
     }),
   )
 
-  /**
-   * Documentation Builder
-   */
-
+  // Documentation Builder
   const config = new DocumentBuilder()
     .setTitle('Webrtc Server')
     .setDescription('API to WebRtc Server')
@@ -60,15 +65,15 @@ async function bootstrap(): Promise<void> {
   const document = SwaggerModule.createDocument(app, config)
   SwaggerModule.setup('API', app, document)
 
-  const PORT = configService.get<number>('appConfig.appPort', 3000)
+  const PORT = configServer.https.listenPort
 
   // Initialize the NestJS application
   await app.init()
 
-  // Start the HTTP server
-  httpServer.listen(PORT, () => {
+  // Start the HTTPS server
+  httpsServer.listen(PORT, () => {
     const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf-8'))
-    logger.log(`Application (${packageJson.name} v${packageJson.version}) running on: http://localhost:${PORT}`)
+    logger.log(`Application (${packageJson.name} v${packageJson.version}) running on: https://localhost:${PORT}`)
   })
 }
 

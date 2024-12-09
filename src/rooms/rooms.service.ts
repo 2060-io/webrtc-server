@@ -23,7 +23,7 @@ import {
 
 import * as protoo from 'protoo-server'
 import * as url from 'url'
-import { Server } from 'http'
+import { Server } from 'https'
 import { NotificationService } from 'src/lib/notification.service'
 
 @Injectable()
@@ -69,7 +69,7 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
 
       this.handleConnection(roomId, peerId, accept)
         .then(() => {
-          this.logger.log(`Peer connected [roomId:${roomId}, peerId:${peerId}]`)
+          this.logger.log(`Peer joined [roomId:${roomId}, peerId:${peerId}]`)
         })
         .catch((error) => {
           this.logger.error(`Failed to handle connection [roomId:${roomId}, peerId:${peerId}]: ${error.message}`)
@@ -108,14 +108,13 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
 
   async handleConnection(roomId: string, peerId: string, accept: () => protoo.WebSocketTransport): Promise<void> {
     let room = this.rooms.get(roomId)
+    this.logger.debug(`[handleConnection] Initialize room: ${room}`)
 
     if (!room) {
-      this.logger.log(`Creating new room: ${roomId}`)
-      //const mediasoupWorker = this.getNextMediasoupWorker()
-      //this.logger.debug(`*** Worker ${mediasoupWorker.pid} ***`)
+      this.logger.log(`[handleConnection] Creating new room: ${roomId}`)
       room = await this.getOrCreateRoom({ roomId })
-      //await Room.create({ mediasoupWorker, roomId })
       this.rooms.set(roomId, room)
+      this.logger.log(`[handleConnection] has been created room: ${roomId}`)
     }
 
     //hardcode to initial test
@@ -124,13 +123,14 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
     room.handleProtooConnection({ peerId, transport, eventNotificationUri })
 
     //send notification to eventNotificationUri
-
-    const joinNotificationData = {
-      roomId,
-      peerId,
-      event: 'peer-joined',
+    if (eventNotificationUri) {
+      const joinNotificationData = {
+        roomId,
+        peerId,
+        event: 'peer-joined',
+      }
+      await this.notificationService.sendNotification(eventNotificationUri, joinNotificationData)
     }
-    await this.notificationService.sendNotification(eventNotificationUri, joinNotificationData)
   }
 
   /**
@@ -229,6 +229,7 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
             `Room created with eventNotificationUri [roomId:${roomId}, eventNotificationUri:${eventNotificationUri}]`,
           )
         }
+        return room
       }
 
       return room
