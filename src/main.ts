@@ -8,7 +8,6 @@ import { getLogLevels } from './config/logger.config'
 import * as express from 'express'
 import * as fs from 'fs'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
-
 import { config as configServer } from './config/config.server'
 
 async function bootstrap(): Promise<void> {
@@ -74,6 +73,7 @@ async function bootstrap(): Promise<void> {
   httpsServer.listen(PORT, () => {
     const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf-8'))
     logger.log(`Application (${packageJson.name} v${packageJson.version}) running on: https://localhost:${PORT}`)
+    logger.log(`Webrtc-server configuration: ${JSON.stringify(configServer, null, 2)}`)
   })
 }
 
