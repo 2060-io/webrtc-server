@@ -32,7 +32,6 @@ describe('RoomsService', () => {
   let service: RoomsService
   let loggerErrorSpy: jest.SpyInstance
   let loggerLogSpy: jest.SpyInstance
-  let mockHttpsServer: any
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({

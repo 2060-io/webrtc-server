@@ -1,6 +1,5 @@
 import { NestFactory } from '@nestjs/core'
 import { AppModule } from './app.module'
-import { ConfigService } from '@nestjs/config'
 import { Logger, ValidationPipe, VersioningType } from '@nestjs/common'
 import { createServer } from 'https'
 import { ExpressAdapter } from '@nestjs/platform-express'
@@ -40,7 +39,6 @@ async function bootstrap(): Promise<void> {
   })
 
   // Retrieve configuration and enable necessary features
-  const configService = app.get(ConfigService)
   app.enableVersioning({ type: VersioningType.URI })
   app.enableCors()
 

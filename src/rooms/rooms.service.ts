@@ -200,7 +200,7 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
 
     try {
       // Generate a random roomId if not provided
-      let room = this.rooms.get(roomId)
+      const room = this.rooms.get(roomId)
 
       // Check if the room already exists
       if (!room) {

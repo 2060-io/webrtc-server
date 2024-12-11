@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { IsOptional, IsUrl, IsInt, Min, IsString, IsObject, IsNotEmpty, IsIn, IsBoolean, IsEnum } from 'class-validator'
+import { IsOptional, IsUrl, IsInt, Min, IsString, IsObject, IsNotEmpty, IsBoolean, IsEnum } from 'class-validator'
 import * as mediasoup from 'mediasoup'
 
 export class CreateRoomDto {
