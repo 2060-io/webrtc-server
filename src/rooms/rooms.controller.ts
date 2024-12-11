@@ -10,7 +10,7 @@ import {
   CreateBroadcasterTransportDto,
   CreateRoomDto,
   DeleteBroadcasterDto,
-} from 'src/rooms/dto/rooms.dto'
+} from './dto/rooms.dto'
 import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger'
 
 @ApiTags('rooms')
@@ -116,7 +116,7 @@ export class RoomsController {
   })
   async getRoom(@Param('roomId') roomId: string) {
     try {
-      const room = await this.roomsService.getOrCreateRoom({ roomId, force: false })
+      const room = await this.roomsService.getOrCreateRoom({ roomId })
       return room.getRouterRtpCapabilities()
     } catch (error) {
       throw new HttpException(`Failed to get room information: ${error.message}`, HttpStatus.NOT_FOUND)

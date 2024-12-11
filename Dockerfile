@@ -1,5 +1,5 @@
 # Stage 0, build the Webrtc Server 
-FROM node:18-slim as builder
+FROM node:22-slim as builder
 
 # Install DEB dependencies and others.
 RUN \

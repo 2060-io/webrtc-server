@@ -4,22 +4,23 @@ services:
     build: .
     image: webrtc-server:test
     environment:
-      - MEDIASOUP_ANNOUNCED_IP=192.168.10.13
-      - PROTOO_LISTEN_PORT=443
+      - LOG_LEVEL=3
+      - MEDIASOUP_ANNOUNCED_IP=192.168.10.15
+      - PROTOO_LISTEN_PORT=4443
       - MEDIASOUP_MIN_PORT=40000
       - MEDIASOUP_MAX_PORT=50000
       - HTTPS_CERT_FULLCHAIN=/config/certs/fullchain.pem
       - HTTPS_CERT_PRIVKEY=/config/certs/privkey.pem
       - MEDIASOUP_CLIENT_ENABLE_ICESERVER=yes
-      - MEDIASOUP_CLIENT_ICESERVER_HOST=192.168.10.13
+      - MEDIASOUP_CLIENT_ICESERVER_HOST=192.168.10.15
       - MEDIASOUP_CLIENT_ICESERVER_PROTO=udp
       - MEDIASOUP_CLIENT_ICESERVER_PORT=3478
       - MEDIASOUP_CLIENT_ICESERVER_USER=test
       - MEDIASOUP_CLIENT_ICESERVER_PASS=test123
-      - MEDIASOUP_CLIENT_PROTOOPORT=443
+      - MEDIASOUP_CLIENT_PROTOOPORT=4443
       - MEDIASOUP_INGRESS_HOST=webrtc.prueba.2060.io
     ports:
-      - '443:443'
+      - '4443:4443'
     volumes:
       - ./certs/fullchain.pem:/config/certs/fullchain.pem
       - ./certs/privkey.pem:/config/certs/privkey.pem
@@ -27,6 +28,8 @@ services:
     image: coturn/coturn
     environment:
       - TURN_USER=test:test123
+    volumes:
+      - ./certs/turnserver.conf:/etc/turnserver.conf
     ports:
       - '3478:3478'
       - '3478:3478/udp'

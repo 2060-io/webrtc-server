@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common'
 import * as mediasoup from 'mediasoup'
 import { Room } from '../lib/Room'
-import { config } from 'src/config/config.server'
+import { config } from '../config/config.server'
 import { v4 as uuidv4 } from 'uuid'
 import {
   ConnectBroadcasterTransportDto,
@@ -24,7 +24,7 @@ import {
 import * as protoo from 'protoo-server'
 import * as url from 'url'
 import { Server } from 'https'
-import { NotificationService } from 'src/lib/notification.service'
+import { NotificationService } from '../lib/notification.service'
 
 @Injectable()
 export class RoomsService implements OnModuleInit, OnModuleDestroy {
@@ -43,12 +43,11 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
     this.httpServer = Reflect.get(global, 'httpServer')
     this.initializeMediasoupWorkers()
   }
+
   async onModuleInit(): Promise<void> {
     this.logger.log('[Protoo-server] WebSocket initializing.')
 
     this.initServer()
-
-    this.logger.log('[Protoo-server] WebSocket initialized.')
 
     //Handle connections from clients
     this.protooServer.on('connectionrequest', (info, accept, reject) => {
@@ -100,6 +99,7 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
         fragmentOutgoingMessages: true,
         fragmentationThreshold: 960000,
       })
+      this.logger.log('[Protoo-server] WebSocket initialized.')
     } catch (error) {
       this.logger.error('Error during Protoo server initialization', error.stack)
       throw error
@@ -170,7 +170,7 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
    * Ensures workers are selected evenly for load distribution.
    * @returns {mediasoup.types.Worker} - The selected Mediasoup worker.
    */
-  private getNextMediasoupWorker(): mediasoup.types.Worker {
+  getNextMediasoupWorker(): mediasoup.types.Worker {
     if (this.mediasoupWorkers.length === 0) {
       throw new InternalServerErrorException('No Mediasoup workers are available')
     }
@@ -193,11 +193,10 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
    */
   async getOrCreateRoom(options: {
     roomId: string
-    force?: boolean
     eventNotificationUri?: string
     maxPeerCount?: number
   }): Promise<Room> {
-    const { roomId, force = false, eventNotificationUri, maxPeerCount } = options
+    const { roomId, eventNotificationUri, maxPeerCount } = options
 
     try {
       // Generate a random roomId if not provided

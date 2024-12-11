@@ -3,11 +3,12 @@ import * as protoo from 'protoo-server'
 import * as mediasoup from 'mediasoup'
 import { Injectable, Logger } from '@nestjs/common'
 import { NotificationService } from './notification.service'
-import { TransportAppData, BweTraceInfo } from 'src/lib/room.interfaces'
-import { config } from 'src/config/config.server'
-import { Device } from 'src/rooms/interfaces/rooms.interfaces'
+import { TransportAppData, BweTraceInfo } from './room.interfaces'
+import { config } from '../config/config.server'
+import { Device } from './room.interfaces'
 import * as throttle from '@sitespeed.io/throttle'
 import { Producer } from 'mediasoup/node/lib/types'
+
 @Injectable()
 export class Room extends EventEmitter {
   private readonly logger = new Logger(Room.name)
@@ -407,11 +408,14 @@ export class Room extends EventEmitter {
           dtlsParameters: mediasoup.types.DtlsParameters
         }
 
+        this.logger.debug(`[handlePeerRequest] connectWebRtcTransport request`)
+
         // Access the transport from the peer's transports map
         const transport = peer.data.transports.get(transportId) as mediasoup.types.WebRtcTransport | undefined
 
         // Check if the transport exists
         if (!transport) {
+          this.logger.debug(`[handlePeerRequest] Transport with id "${transportId}" not found`)
           reject(`Transport with id "${transportId}" not found`)
           return
         }
@@ -419,9 +423,10 @@ export class Room extends EventEmitter {
         try {
           // Connect the transport with the provided DTLS parameters
           await transport.connect({ dtlsParameters })
+          this.logger.debug(`[handlePeerRequest] Connect the transport with the provided DTLS parameters`)
           accept()
         } catch (error) {
-          this.logger.error(`Failed to connect transport with id "${transportId}"`)
+          this.logger.error(`[handlePeerRequest] Failed to connect transport with id "${transportId}"`)
           reject(`Failed to connect transport with id "${transportId}"`)
         }
 
