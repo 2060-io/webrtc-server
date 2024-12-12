@@ -1,0 +1,123 @@
+name: Continuous Integration
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, labeled]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout message-pickup-repository
+        uses: actions/checkout@v4
+
+      - name: Setup node v22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: |
+          yarn install
+
+      - name: Check Format
+        run: |
+          yarn format
+
+      - name: Check Types
+        run: |
+          yarn check-types
+
+      - name: Unit tests
+        run: |
+          yarn test
+
+      - name: E2E tests
+        run: |
+          yarn test:e2e
+
+  release-please:
+    runs-on: ubuntu-latest
+    needs: [build]
+    outputs:
+      releases_created: ${{ steps.release-please.outputs.releases_created }}
+      paths_released: ${{ steps.release-please.outputs.paths_released }}
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release-please
+        with:
+          path: ./packages
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Print release outputs for debugging
+        continue-on-error: true
+        run: |
+          echo "Release outputs:"
+          echo ${{ toJson(steps.release-please.outputs) }}
+
+  # Initiate release process if release was created
+  release-client:
+    if: contains(needs.release-please.outputs.paths_released, 'packages/client')
+    runs-on: ubuntu-latest
+    needs: [release-please]
+    steps:
+      - name: Checkout message-pickup-repository
+        uses: actions/checkout@v4
+      - name: Setup node v20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: 'https://registry.npmjs.org/'
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile --ignore-scripts
+
+      - name: Release to NPM
+        run: |
+          cd packages/client
+          npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  release-server:
+    if: contains(needs.release-please.outputs.paths_released, 'packages/server')
+    runs-on: ubuntu-latest
+    needs: [release-please]
+    env:
+      DH_USERNAME: ${{secrets.DOCKER_HUB_LOGIN}}
+      DH_TOKEN: ${{secrets.DOCKER_HUB_PWD}}
+      IMAGE_NAME: 'message-pickup-repository'
+      IMAGE_TAG: ${{ github.ref == 'refs/heads/main' && 'dev' || github.ref }}
+    steps:
+      - name: Checkout message-pickup-repository
+        uses: actions/checkout@v4
+      - name: Setup node v20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: 'https://registry.npmjs.org/'
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile --ignore-scripts
+
+      - name: Log in to Docker Hub
+        run: |
+          echo "$DH_TOKEN" | docker login -u "$DH_USERNAME" --password-stdin
+
+      - name: Build Docker image
+        run: |
+          cp yarn.lock packages/server
+          cd packages/server
+          docker build -f Dockerfile -t $DH_USERNAME/$IMAGE_NAME:$IMAGE_TAG .
+
+      - name: Push to DockerHub
+        run: docker push $DH_USERNAME/$IMAGE_NAME:$IMAGE_TAG
