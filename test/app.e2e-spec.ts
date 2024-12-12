@@ -1,6 +1,4 @@
-import * as fs from 'fs'
 import { createServer, Server } from 'https'
-import * as protooClient from 'protoo-client'
 import { ConsoleLogger, INestApplication, ValidationPipe } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import * as express from 'express'
@@ -8,8 +6,7 @@ import { ExpressAdapter } from '@nestjs/platform-express'
 import { AppModule } from '../src/app.module'
 import * as request from 'supertest'
 import * as selfsigned from 'selfsigned'
-import { RoomsService } from '../src/rooms/rooms.service'
-import { RoomsModule } from '../src/rooms/rooms.module'
+
 jest.setTimeout(20000)
 
 describe('Protoo WebSocket E2E Test', () => {

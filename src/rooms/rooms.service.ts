@@ -20,12 +20,10 @@ import {
   CreateBroadcasterProducerDto,
   CreateBroadcasterTransportDto,
 } from './dto/rooms.dto'
-
 import * as protoo from 'protoo-server'
 import * as url from 'url'
 import { Server } from 'https'
 import { NotificationService } from '../lib/notification.service'
-import { LogLevel } from '@nestjs/common'
 
 @Injectable()
 export class RoomsService implements OnModuleInit, OnModuleDestroy {
@@ -186,8 +184,15 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  /**
+   * Closes all active Mediasoup workers.
+   *
+   * This method iterates over the list of Mediasoup workers, logs the closure process for each worker,
+   * and invokes the `close` method to terminate them. After closing, the workers list is cleared.
+   *
+   * @returns {Promise<void>} Resolves when all workers are closed and the list is cleared.
+   */
   private async closeMediasoupWorkers(): Promise<void> {
-    const numWorkers = config.mediasoup.numWorkers
     this.logger.log(`Close ${this.mediasoupWorkers.length} Mediasoup Workers`)
     this.mediasoupWorkers.forEach((worker) => {
       this.logger.debug(`Closing Mediasoup Worker [pid:${worker.pid}]`)
@@ -196,6 +201,14 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
     this.mediasoupWorkers.length = 0
   }
 
+  /**
+   * Closes all active rooms.
+   *
+   * This method iterates through all active rooms, logs the closure process for each room,
+   * invokes the `close` method on each room to terminate it, and then clears the rooms map.
+   *
+   * @returns {Promise<void>} Resolves when all rooms are closed and the map is cleared.
+   */
   private async closeRooms(): Promise<void> {
     // Close all active rooms
     for (const [roomId, room] of this.rooms.entries()) {
