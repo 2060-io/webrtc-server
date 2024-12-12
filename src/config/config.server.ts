@@ -22,7 +22,7 @@ export const config = {
   mediasoup: {
     numWorkers: Object.keys(os.cpus()).length,
     workerSettings: {
-      logLevel: 'warn',
+      logLevel: 'debug',
       logTags: ['info', 'ice', 'dtls', 'rtp', 'srtp', 'rtcp', 'rtx', 'bwe', 'score', 'simulcast', 'svc', 'sctp'],
       rtcMinPort: parseInt(process.env.MEDIASOUP_MIN_PORT || '40000', 10),
       rtcMaxPort: parseInt(process.env.MEDIASOUP_MAX_PORT || '49999', 10),

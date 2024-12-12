@@ -1,21 +1,87 @@
-import { Test, TestingModule } from '@nestjs/testing'
-import { INestApplication } from '@nestjs/common'
+import * as fs from 'fs'
+import { createServer, Server } from 'https'
+import * as protooClient from 'protoo-client'
+import { ConsoleLogger, INestApplication, ValidationPipe } from '@nestjs/common'
+import { Test } from '@nestjs/testing'
+import * as express from 'express'
+import { ExpressAdapter } from '@nestjs/platform-express'
+import { AppModule } from '../src/app.module'
 import * as request from 'supertest'
-import { AppModule } from './../src/app.module'
+import * as selfsigned from 'selfsigned'
+import { RoomsService } from '../src/rooms/rooms.service'
+import { RoomsModule } from '../src/rooms/rooms.module'
+jest.setTimeout(20000)
 
-describe('AppController (e2e)', () => {
+describe('Protoo WebSocket E2E Test', () => {
   let app: INestApplication
+  let httpsServer: Server
 
-  beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
+  beforeAll(async () => {
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
+    const expressApp = express()
+    expressApp.use(express.static('public'))
+
+    const attrs = [{ name: 'commonName', value: '127.0.0.0' }]
+    const options = { days: 1 }
+    const pems = selfsigned.generate(attrs, options)
+
+    const httpsOptions = {
+      key: pems.private,
+      cert: pems.cert,
+    }
+
+    httpsServer = createServer(httpsOptions, expressApp)
+
+    const moduleFixture = await Test.createTestingModule({
       imports: [AppModule],
     }).compile()
 
-    app = moduleFixture.createNestApplication()
+    Reflect.set(global, 'httpServer', httpsServer)
+
+    app = moduleFixture.createNestApplication(new ExpressAdapter(expressApp))
+
+    app.useLogger(new ConsoleLogger('App', { timestamp: true }))
+
+    app.useGlobalPipes(new ValidationPipe())
     await app.init()
+    await new Promise<void>((resolve) => {
+      httpsServer.listen(4443, () => {
+        console.log('***httpServer test initialized***')
+        resolve()
+      })
+    })
   })
 
-  it('/ (GET)', () => {
-    return request(app.getHttpServer()).get('/').expect(200).expect('Hello World!')
+  afterAll(async () => {
+    await app.close()
+    await new Promise((resolve) => setTimeout(resolve, 2000))
+
+    await new Promise<void>((resolve, reject) => {
+      httpsServer.close((err?: Error) => {
+        if (err) return reject(err)
+        resolve()
+      })
+    })
+    await new Promise((resolve) => setTimeout(resolve, 2000))
+
+    Reflect.deleteProperty(global, 'httpServer')
   })
+
+  it('should create a new room using the REST API', async () => {
+    const createRoomDto = {
+      eventNotificationUri: 'http://localhost/test',
+      maxPeerCount: 10,
+    }
+
+    const response = await request(app.getHttpServer()).post('/rooms/testRoom').send(createRoomDto).expect(201)
+
+    console.log(response.body)
+
+    expect(response.body).toHaveProperty('roomId', 'testRoom')
+    expect(response.body).toHaveProperty('wsUrl')
+    expect(response.body.wsUrl).toMatch(/^wss:\/\//)
+    expect(response.body).toHaveProperty('protocol', '2060-mediasoup-v1')
+  })
+
+  //TODO: connect to the Protoo server and handle requests
 })

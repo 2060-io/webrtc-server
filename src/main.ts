@@ -21,6 +21,8 @@ async function bootstrap(): Promise<void> {
   // Set case sensitive routing
   expressApp.set('case sensitive routing', true)
 
+  expressApp.use(express.static('public'))
+
   // Activate TLS
   const httpsOptions = {
     key: fs.readFileSync(configServer.https.tls.key),

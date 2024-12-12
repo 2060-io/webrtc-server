@@ -115,7 +115,7 @@ export class Room extends EventEmitter {
     if (this.networkThrottled) {
       this.logger.debug('close() | stopping network throttle')
 
-      throttle.stop().catch((error) => {
+      throttle.stop().catch((error: any) => {
         this.logger.error(`close() | failed to stop network throttle:${error}`)
       })
     }

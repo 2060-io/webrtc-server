@@ -70,10 +70,10 @@ export class RoomsController {
   async createRoom(@Param('roomId') roomId: string, @Body() createRoomDto: CreateRoomDto) {
     const { eventNotificationUri, maxPeerCount } = createRoomDto
     try {
-      return this.roomsService.createRoom(roomId, eventNotificationUri, maxPeerCount)
+      return await this.roomsService.createRoom(roomId, eventNotificationUri, maxPeerCount)
     } catch (error) {
-      this.logger.error(`Failed to create room: ${error.message}`)
-      throw new HttpException(`Failed to create room: ${error.message}`, HttpStatus.INTERNAL_SERVER_ERROR)
+      this.logger.error(`${error.message}`)
+      throw new HttpException(`${error.message}`, HttpStatus.INTERNAL_SERVER_ERROR)
     }
   }
 

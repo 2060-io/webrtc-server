@@ -25,6 +25,7 @@ import * as protoo from 'protoo-server'
 import * as url from 'url'
 import { Server } from 'https'
 import { NotificationService } from '../lib/notification.service'
+import { LogLevel } from '@nestjs/common'
 
 @Injectable()
 export class RoomsService implements OnModuleInit, OnModuleDestroy {
@@ -40,11 +41,10 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
 
   constructor() {
     this.notificationService = new NotificationService()
-    this.httpServer = Reflect.get(global, 'httpServer')
-    this.initializeMediasoupWorkers()
   }
 
   async onModuleInit(): Promise<void> {
+    await this.initializeMediasoupWorkers()
     this.logger.log('[Protoo-server] WebSocket initializing.')
 
     this.initServer()
@@ -77,8 +77,23 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
     })
   }
 
-  onModuleDestroy() {
-    throw new Error('Method not implemented.')
+  async onModuleDestroy() {
+    this.logger.log('Cleaning up resources in RoomsService.')
+
+    // Close Rooms
+    await this.closeRooms()
+
+    // Close all Mediasoup Workers
+    await this.closeMediasoupWorkers()
+
+    // Stop the Protoo WebSocketServer if it is running
+    if (this.protooServer) {
+      this.logger.log('Stopping Protoo WebSocketServer.')
+      this.protooServer.stop()
+    }
+
+    // Remove the global httpServer
+    Reflect.deleteProperty(global, 'httpServer')
   }
 
   /**
@@ -87,6 +102,10 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
    */
   private initServer(): void {
     try {
+      this.httpServer = Reflect.get(global, 'httpServer')
+
+      this.logger.debug(`**** httpServer ${JSON.stringify(this.httpServer, null, 2)}`)
+
       if (!this.httpServer) {
         this.logger.error(`HTTP server not found. Ensure it is set in main.ts.`)
         throw new Error(`HTTP server not found. Ensure it is set in main.ts.`)
@@ -143,18 +162,20 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
 
     this.logger.log(`Initializing ${numWorkers} Mediasoup Workers`)
 
+    const workerSettings = config.mediasoup.workerSettings as mediasoup.types.WorkerSettings
+
     for (let i = 0; i < numWorkers; i++) {
       try {
-        const worker = await mediasoup.createWorker({
-          logLevel: 'debug',
-          logTags: ['info', 'ice', 'dtls'],
-          rtcMinPort: 40000,
-          rtcMaxPort: 49999,
-        })
+        const worker = await mediasoup.createWorker(workerSettings)
+        this.logger.log(`Initializing worker ${worker.pid} Mediasoup Workers`)
 
         worker.on('died', () => {
           this.logger.error(`Mediasoup Worker died [pid:${worker.pid}]`)
-          process.exit(1) // Terminate the application if a worker fails
+          process.exit(1)
+        })
+
+        worker.on('subprocessclose', () => {
+          this.logger.debug(`Mediasoup Worker subprocessclose [pid:${worker.pid}]`)
         })
 
         this.mediasoupWorkers.push(worker)
@@ -163,6 +184,25 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
         throw new InternalServerErrorException('Failed to initialize Mediasoup workers')
       }
     }
+  }
+
+  private async closeMediasoupWorkers(): Promise<void> {
+    const numWorkers = config.mediasoup.numWorkers
+    this.logger.log(`Close ${this.mediasoupWorkers.length} Mediasoup Workers`)
+    this.mediasoupWorkers.forEach((worker) => {
+      this.logger.debug(`Closing Mediasoup Worker [pid:${worker.pid}]`)
+      worker.close()
+    })
+    this.mediasoupWorkers.length = 0
+  }
+
+  private async closeRooms(): Promise<void> {
+    // Close all active rooms
+    for (const [roomId, room] of this.rooms.entries()) {
+      this.logger.debug(`Closing room [roomId:${roomId}]`)
+      room.close()
+    }
+    this.rooms.clear()
   }
 
   /**
