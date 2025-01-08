@@ -120,3 +120,61 @@ export class CreateBroadcasterDataProducerDto {
   @IsOptional()
   appData?: Record<string, any>
 }
+
+/**
+ * Data Transfer Object for handling room events.
+ * This DTO validates the structure of messages exchanged between instances.
+ */
+export class RoomEventDto {
+  /**
+   * The type of action being performed (e.g., 'roomCreated', 'producerCreated', 'consumerCreated').
+   */
+  @IsString()
+  action: string
+
+  /**
+   * Unique identifier for the room.
+   */
+  @IsString()
+  roomId: string
+
+  /**
+   * Unique identifier for the instance emitting the event.
+   */
+  @IsString()
+  instance: string
+
+  /**
+   * Optional producer identifier, used when a producer is created.
+   */
+  @IsOptional()
+  @IsString()
+  producerId?: string
+
+  /**
+   * Optional consumer identifier, used when a consumer is created.
+   */
+  @IsOptional()
+  @IsString()
+  consumerId?: string
+
+  /**
+   * Optional pipe producer identifier, used in PipeTransport scenarios.
+   */
+  @IsOptional()
+  @IsString()
+  pipeProducerId?: string
+
+  /**
+   * Optional kind of media (audio/video) associated with the producer or consumer.
+   */
+  @IsOptional()
+  @IsString()
+  kind?: string
+
+  /**
+   * Optional RTP parameters associated with a producer or consumer.
+   */
+  @IsOptional()
+  rtpParameters?: any
+}

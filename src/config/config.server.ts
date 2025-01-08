@@ -111,5 +111,10 @@ export const config = {
       },
       maxSctpMessageSize: 262144,
     },
+    pipeTransportOptions: {
+      listenIp: { ip: '0.0.0.0', announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || '127.0.0.1' },
+      enableSrtp: true,
+      enableRtx: true,
+    },
   },
 }

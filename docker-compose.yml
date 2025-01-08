@@ -19,6 +19,7 @@ services:
       - MEDIASOUP_CLIENT_ICESERVER_PASS=test123
       - MEDIASOUP_CLIENT_PROTOOPORT=4443
       - MEDIASOUP_INGRESS_HOST=webrtc.prueba.2060.io
+      - REDIS_URL=redis://redis:6379
     ports:
       - '4443:4443'
     volumes:
@@ -33,3 +34,11 @@ services:
     ports:
       - '3478:3478'
       - '3478:3478/udp'
+
+  redis:
+    container_name: redis
+    image: redis:alpine
+    restart: always
+    ports:
+      - 6379:6379
+    command: redis-server --maxmemory 64mb --maxmemory-policy allkeys-lru

@@ -14,3 +14,8 @@ export interface Device {
   version?: string // Optional: Version of the device or application
   flag?: string // Optional: Any specific flag (e.g., "broadcaster")
 }
+
+export interface redisMessage {
+  action: string
+  roomId: string
+} 

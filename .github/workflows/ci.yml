@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout message-pickup-repository
+      - name: Checkout webrtc-server
         uses: actions/checkout@v4
 
       - name: Setup node v22

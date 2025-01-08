@@ -19,11 +19,16 @@ import {
   CreateBroadcasterDto,
   CreateBroadcasterProducerDto,
   CreateBroadcasterTransportDto,
+  RoomEventDto,
 } from './dto/rooms.dto'
 import * as protoo from 'protoo-server'
 import * as url from 'url'
 import { Server } from 'https'
 import { NotificationService } from '../lib/notification.service'
+import { RoomFactory } from 'src/lib/RoomFactory'
+import { InjectRedis } from '@nestjs-modules/ioredis'
+import Redis from 'ioredis'
+import { plainToClass } from 'class-transformer'
 
 @Injectable()
 export class RoomsService implements OnModuleInit, OnModuleDestroy {
@@ -36,9 +41,16 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
 
   private protooServer: protoo.WebSocketServer
   private httpServer: Server
+  private readonly redisSubscriber: Redis
+  private readonly redisPublisher: Redis
 
-  constructor() {
+  constructor(
+    private roomFactory: RoomFactory,
+    @InjectRedis() private readonly redis: Redis,
+  ) {
     this.notificationService = new NotificationService()
+    this.redisSubscriber = this.redis.duplicate()
+    this.redisPublisher = this.redis.duplicate()
   }
 
   async onModuleInit(): Promise<void> {
@@ -73,6 +85,13 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
           reject(500, error.message)
         })
     })
+
+    this.redisSubscriber.subscribe('rooms', (err, count) => {
+      if (err) this.logger.error(err.message)
+      this.logger.log(`Subscribed ${count} to channel rooms.`)
+    })
+
+    this.initializeRoomSubscriber()
   }
 
   async onModuleDestroy() {
@@ -101,8 +120,6 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
   private initServer(): void {
     try {
       this.httpServer = Reflect.get(global, 'httpServer')
-
-      this.logger.debug(`**** httpServer ${JSON.stringify(this.httpServer, null, 2)}`)
 
       if (!this.httpServer) {
         this.logger.error(`HTTP server not found. Ensure it is set in main.ts.`)
@@ -252,7 +269,7 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
     const { roomId, eventNotificationUri, maxPeerCount } = options
 
     try {
-      // Generate a random roomId if not provided
+      // find roomId exist
       const room = this.rooms.get(roomId)
 
       // Check if the room already exists
@@ -260,13 +277,23 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
         this.logger.log(`[getOrCreateRoom] creating room [roomId:${roomId}]`)
         const mediasoupWorker = this.getNextMediasoupWorker()
         // Create the new room instance
-        const room = await Room.create({
+
+        const room = await this.roomFactory.createRoom({
           mediasoupWorker,
           roomId: roomId,
           consumerReplicas: 0,
           maxPeerCount,
           mediaCodecs: config.mediasoup.routerOptions.mediaCodecs as mediasoup.types.RtpCodecCapability[],
         })
+
+        await this.redisPublisher.publish(
+          'rooms',
+          JSON.stringify({
+            action: 'roomCreated',
+            roomId,
+            instance: config.mediasoup.pipeTransportOptions.listenIp.announcedIp,
+          }),
+        )
         // Store the room in the rooms map
         this.rooms.set(roomId, room)
         // Handle room closure
@@ -604,5 +631,44 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
    */
   private getRoomById(roomId: string): Room | undefined {
     return this.rooms.get(roomId)
+  }
+
+  /**
+   * Subscribes to the Redis channel "rooms".
+   * Handles incoming messages about new rooms and producer/consumer events in other instances.
+   */
+  private async initializeRoomSubscriber(): Promise<void> {
+    this.redisSubscriber.on('message', async (channel, message: string) => {
+      let event: RoomEventDto
+
+      event = plainToClass(RoomEventDto, JSON.parse(message))
+
+      this.logger.debug(`*** Received event: ${JSON.stringify(event)} ***`)
+
+      const room = this.rooms.get(event.roomId)
+
+      // Process events based on their action type
+      switch (event.action) {
+        case 'roomCreated':
+          if (!room) {
+            this.logger.log(`Detected new room ${event.roomId} from another instance`)
+            try {
+              const room = await this.getOrCreateRoom({ roomId: event.roomId })
+              const { mediasoupRouter } = room
+              room.connectToRemotePipeTransport(mediasoupRouter, event.roomId, event.instance)
+            } catch (error) {
+              this.logger.error(`Failed to connect to remote PipeTransport: ${error.message}`)
+            }
+          }
+
+          break
+
+        default:
+          this.logger.warn(`Unknown action type: ${event.action}`)
+      }
+    })
+
+    // Log a message indicating successful subscription to the channel
+    this.logger.log('Subscribed to Redis channel for room synchronization.')
   }
 }
