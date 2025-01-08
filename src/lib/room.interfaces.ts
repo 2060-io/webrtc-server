@@ -18,4 +18,4 @@ export interface Device {
 export interface redisMessage {
   action: string
   roomId: string
-} 
+}

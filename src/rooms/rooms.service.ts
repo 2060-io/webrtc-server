@@ -639,9 +639,7 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
    */
   private async initializeRoomSubscriber(): Promise<void> {
     this.redisSubscriber.on('message', async (channel, message: string) => {
-      let event: RoomEventDto
-
-      event = plainToClass(RoomEventDto, JSON.parse(message))
+      const event: RoomEventDto = plainToClass(RoomEventDto, JSON.parse(message))
 
       this.logger.debug(`*** Received event: ${JSON.stringify(event)} ***`)
 

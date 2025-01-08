@@ -3,12 +3,11 @@ import * as protoo from 'protoo-server'
 import * as mediasoup from 'mediasoup'
 import { Injectable, Logger } from '@nestjs/common'
 import { NotificationService } from './notification.service'
-import { TransportAppData, BweTraceInfo, redisMessage } from './room.interfaces'
+import { TransportAppData, BweTraceInfo } from './room.interfaces'
 import { config } from '../config/config.server'
 import { Device } from './room.interfaces'
 import * as throttle from '@sitespeed.io/throttle'
 import { Producer } from 'mediasoup/node/lib/types'
-import { InjectRedis } from '@nestjs-modules/ioredis'
 import Redis from 'ioredis'
 
 @Injectable()
@@ -96,7 +95,6 @@ export class Room extends EventEmitter {
     this.setMaxListeners(Infinity)
 
     this.roomId = roomId
-    // this.close = false Review
     this.protooRoom = protooRoom
     this.mediasoupRouter = mediasoupRouter
     this.audioLevelObserver = audioLevelObserver
@@ -109,16 +107,6 @@ export class Room extends EventEmitter {
     this.redis = redis
     this.redisSubscriber = this.redis.duplicate()
     this.redisPublisher = this.redis.duplicate()
-
-    //initialize subscriber to redis channel (room)
-    /*this.initializeRoomSubscriber().catch((error) => {
-      this.logger.error(`Failed to initialize room Subscriber: ${error.message}`)
-    })*/
-
-    //initialize pipetransport for each room
-    this.initializePipeTransport(roomId).catch((error) => {
-      this.logger.error(`Failed to initialize PipeTransport for room ${roomId}: ${error.message}`)
-    })
   }
 
   close(): void {
@@ -2075,7 +2063,7 @@ export class Room extends EventEmitter {
     const id: string = producer.id
     const pipeProducer = await pipeTransport.produce(producer)
 
-    this.logger.log(`PipeProducer created for Producer ID: ${producer.id}`)
+    this.logger.log(`PipeProducer created for Producer ID: ${id}`)
     return pipeProducer
   }
 

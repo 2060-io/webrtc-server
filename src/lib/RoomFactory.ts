@@ -1,4 +1,4 @@
-import { Injectable, Inject, Logger } from '@nestjs/common'
+import { Injectable, Logger } from '@nestjs/common'
 import * as mediasoup from 'mediasoup'
 import { Room } from './Room'
 import Redis from 'ioredis'
