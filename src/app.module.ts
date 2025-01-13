@@ -11,7 +11,6 @@ import { RoomFactory } from './lib/RoomFactory'
   imports: [
     HttpModule,
     ConfigModule.forRoot({
-      envFilePath: '.env',
       load: [appConfig],
       isGlobal: true,
     }),

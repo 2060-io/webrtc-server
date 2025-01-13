@@ -36,7 +36,7 @@ export class CreateBroadcasterDto {
 
   @IsObject()
   @IsOptional()
-  rtpCapabilities?: any
+  rtpCapabilities?: mediasoup.types.RtpCapabilities
 }
 
 export class DeleteBroadcasterDto {
@@ -63,7 +63,7 @@ export class CreateBroadcasterTransportDto {
 
   @IsObject()
   @IsOptional()
-  sctpCapabilities?: any
+  sctpCapabilities?: mediasoup.types.SctpCapabilities
 }
 
 /**
@@ -176,5 +176,5 @@ export class RoomEventDto {
    * Optional RTP parameters associated with a producer or consumer.
    */
   @IsOptional()
-  rtpParameters?: any
+  rtpParameters?: mediasoup.types.RtpParameters
 }
