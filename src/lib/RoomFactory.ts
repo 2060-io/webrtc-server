@@ -43,8 +43,6 @@ export class RoomFactory {
 
     this.logger.debug(`*** RoomId: ${roomId}`)
 
-    const redis = this.redis
-
     return new Room({
       roomId,
       protooRoom,

@@ -79,5 +79,4 @@ describe('Protoo WebSocket E2E Test', () => {
     expect(response.body.wsUrl).toMatch(/^wss:\/\//)
     expect(response.body).toHaveProperty('protocol', '2060-mediasoup-v1')
   })
-
 })

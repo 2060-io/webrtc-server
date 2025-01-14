@@ -4,7 +4,6 @@ import appConfig from './config/app.config'
 import { NotificationService } from './lib/notification.service'
 import { HttpModule } from '@nestjs/axios'
 import { RoomsModule } from './rooms/rooms.module'
-import { HandledRedisModule } from './modules/redis.module'
 
 @Module({
   imports: [
