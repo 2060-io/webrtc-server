@@ -8,7 +8,6 @@ import { config } from '../config/config.server'
 import { Device } from './room.interfaces'
 import * as throttle from '@sitespeed.io/throttle'
 import { Producer } from 'mediasoup/node/lib/types'
-import Redis from 'ioredis'
 
 @Injectable()
 export class Room extends EventEmitter {
@@ -26,10 +25,6 @@ export class Room extends EventEmitter {
   private readonly webRtcServer: any
   private networkThrottled: boolean
   private closed = false
-  private readonly redis: Redis
-  private readonly redisSubscriber: Redis
-  private readonly redisPublisher: Redis
-  private pipeTransport: mediasoup.types.PipeTransport | null = null
 
   static async create({
     mediasoupWorker,
@@ -78,7 +73,6 @@ export class Room extends EventEmitter {
     activeSpeakerObserver,
     consumerReplicas,
     maxPeerCount,
-    redis,
   }: {
     roomId: string
     protooRoom: protoo.Room
@@ -88,7 +82,6 @@ export class Room extends EventEmitter {
     activeSpeakerObserver: mediasoup.types.ActiveSpeakerObserver
     consumerReplicas: number
     maxPeerCount?: number
-    redis?: Redis
   }) {
     super()
 
@@ -104,9 +97,6 @@ export class Room extends EventEmitter {
     this.webRtcServer = webRtcServer
     this.networkThrottled = false
     this.notificationService = new NotificationService()
-    this.redis = redis
-    this.redisSubscriber = this.redis.duplicate()
-    this.redisPublisher = this.redis.duplicate()
   }
 
   close(): void {
@@ -506,15 +496,6 @@ export class Room extends EventEmitter {
             rtpParameters,
             appData,
           })
-
-          // publish producer
-          const event = {
-            action: 'producerCreated',
-            roomId: this.roomId,
-            producerId: producer.id,
-            instance: config.mediasoup.pipeTransportOptions.listenIp.announcedIp,
-          }
-          await this.redisPublisher.publish('rooms', JSON.stringify(event))
         } catch (error) {
           this.logger.error(`Failed to produce on transport with id "${transportId}": ${error}`)
           reject(`Failed to produce on transport with id ${transportId}`)
@@ -1304,16 +1285,6 @@ export class Room extends EventEmitter {
             await consumer.resume()
 
             consumerPeer.notify('consumerScore', { consumerId: consumer.id, score: consumer.score }).catch(() => {})
-
-            // publish consumer tu create piperouter
-            const event = {
-              action: 'consumerCreated',
-              roomId: this.roomId,
-              consumerId: consumer.id,
-              producerId: producer.id,
-              peerId: consumerPeer.id,
-            }
-            await this.redisPublisher.publish('rooms', JSON.stringify(event))
           } catch (error) {
             this.logger.warn(`createConsumer() | failed: ${error}`)
           }
@@ -1996,96 +1967,6 @@ export class Room extends EventEmitter {
         this.logger.error('Error handling "dominantspeaker" event:', error.message)
       }
     })
-  }
-
-  //Handles Pipe transport
-
-  async createPipeTransport(router: mediasoup.types.Router) {
-    const pipeTransportOptions: mediasoup.types.PipeTransportOptions = config.mediasoup.pipeTransportOptions
-    const pipeTransport = await router.createPipeTransport(pipeTransportOptions)
-
-    return pipeTransport
-  }
-
-  async registerPipeTransportInfo(pipeTransport: mediasoup.types.PipeTransport, roomId: string) {
-    const info = {
-      ip: pipeTransport.tuple.localIp,
-      port: pipeTransport.tuple.localPort,
-      srtpParameters: pipeTransport.srtpParameters,
-    }
-
-    await this.redis.set(`pipeTransport:${roomId}-${pipeTransport.tuple.localIp}`, JSON.stringify(info))
-    this.logger.log(`PipeTransport info registered for room ${roomId}`)
-  }
-
-  async connectToRemotePipeTransport(
-    router: mediasoup.types.Router,
-    roomId: string,
-    instance: string,
-  ): Promise<mediasoup.types.PipeTransport> {
-    const localIp = config.mediasoup.pipeTransportOptions.listenIp.announcedIp
-    const info = await this.redis.get(`pipeTransport:${roomId}-${instance}`)
-
-    if (!info) {
-      throw new Error(`No PipeTransport info found for room ${roomId}`)
-    }
-
-    const remoteInfo = JSON.parse(info)
-
-    this.logger.debug(`*** remoteIp: ${remoteInfo.ip} ---  localIp: ${localIp}`)
-
-    if (remoteInfo.ip === localIp) {
-      this.logger.warn(`Skipping connection to PipeTransport of room ${roomId} on local IP ${localIp}`)
-      return null
-    }
-
-    const pipeTransportOptions: mediasoup.types.PipeTransportOptions = config.mediasoup.pipeTransportOptions
-    const pipeTransport = await router.createPipeTransport(pipeTransportOptions)
-
-    await pipeTransport
-      .connect({
-        ip: remoteInfo.ip,
-        port: remoteInfo.port,
-        srtpParameters: remoteInfo.srtpParameters,
-      })
-      .catch((error) => {
-        this.logger.error(`Failed to Connected remote PipeTransport: ${error.message}`)
-      })
-
-    this.logger.log(`Connected to remote PipeTransport for room ${roomId}`)
-    return pipeTransport
-  }
-
-  async pipeProducerToRemoteRouter(
-    producer: mediasoup.types.Producer,
-    pipeTransport: mediasoup.types.PipeTransport,
-  ): Promise<mediasoup.types.Producer> {
-    const id: string = producer.id
-    const pipeProducer = await pipeTransport.produce(producer)
-
-    this.logger.log(`PipeProducer created for Producer ID: ${id}`)
-    return pipeProducer
-  }
-
-  async pipeConsumerToRemoteRouter(
-    consumer: mediasoup.types.Consumer,
-    pipeTransport: mediasoup.types.PipeTransport,
-  ): Promise<mediasoup.types.Consumer> {
-    const pipeConsumer = await pipeTransport.consume(consumer)
-
-    this.logger.log(`PipeConsumer created for Consumer ID: ${consumer.id}`)
-    return pipeConsumer
-  }
-
-  private async initializePipeTransport(roomId: string): Promise<void> {
-    try {
-      this.pipeTransport = await this.createPipeTransport(this.mediasoupRouter)
-      await this.registerPipeTransportInfo(this.pipeTransport, roomId)
-      this.logger.log(`PipeTransport initialized for room ${roomId}`)
-    } catch (error) {
-      this.logger.error(`Error initializing PipeTransport for room ${roomId}: ${error.message}`)
-      throw error
-    }
   }
 
   /**

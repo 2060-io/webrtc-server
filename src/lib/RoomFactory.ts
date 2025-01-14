@@ -54,7 +54,6 @@ export class RoomFactory {
       activeSpeakerObserver,
       consumerReplicas,
       maxPeerCount,
-      redis,
     })
   }
 }
