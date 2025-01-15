@@ -4,8 +4,9 @@ services:
     build: .
     image: webrtc-server:test
     environment:
+      - LOG_LEVEL=3
       - MEDIASOUP_ANNOUNCED_IP=192.168.10.15
-      - PROTOO_LISTEN_PORT=443
+      - PROTOO_LISTEN_PORT=4443
       - MEDIASOUP_MIN_PORT=40000
       - MEDIASOUP_MAX_PORT=50000
       - HTTPS_CERT_FULLCHAIN=/config/certs/fullchain.pem
@@ -16,10 +17,11 @@ services:
       - MEDIASOUP_CLIENT_ICESERVER_PORT=3478
       - MEDIASOUP_CLIENT_ICESERVER_USER=test
       - MEDIASOUP_CLIENT_ICESERVER_PASS=test123
-      - MEDIASOUP_CLIENT_PROTOOPORT=443
+      - MEDIASOUP_CLIENT_PROTOOPORT=4443
       - MEDIASOUP_INGRESS_HOST=webrtc.prueba.2060.io
+      - REDIS_URL=redis://redis:6379
     ports:
-      - '443:443'
+      - '4443:4443'
     volumes:
       - ./certs/fullchain.pem:/config/certs/fullchain.pem
       - ./certs/privkey.pem:/config/certs/privkey.pem
@@ -27,6 +29,16 @@ services:
     image: coturn/coturn
     environment:
       - TURN_USER=test:test123
+    volumes:
+      - ./certs/turnserver.conf:/etc/turnserver.conf
     ports:
       - '3478:3478'
       - '3478:3478/udp'
+
+  redis:
+    container_name: redis
+    image: redis:alpine
+    restart: always
+    ports:
+      - 6379:6379
+    command: redis-server --maxmemory 64mb --maxmemory-policy allkeys-lru

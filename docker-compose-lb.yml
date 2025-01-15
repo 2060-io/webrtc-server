@@ -1,0 +1,79 @@
+version: '3.7'
+services:
+  mediasoup1:
+    build: .
+    image: webrtc-server:test
+    container_name: mediasoup1
+    networks:
+      mediasoup_net:
+        ipv4_address: 192.168.10.11
+    environment:
+      - LOG_LEVEL=3
+      - MEDIASOUP_ANNOUNCED_IP=192.168.10.11
+      - PROTOO_LISTEN_PORT=4443
+      - MEDIASOUP_MIN_PORT=40000
+      - MEDIASOUP_MAX_PORT=41000
+      - HTTPS_CERT_FULLCHAIN=/config/certs/fullchain.pem
+      - HTTPS_CERT_PRIVKEY=/config/certs/privkey.pem
+      - REDIS_URL=redis://redis:6379
+      - MEDIASOUP_CLIENT_ENABLE_ICESERVER=no
+      - MEDIASOUP_CLIENT_ICESERVER_HOST=192.168.10.11
+      - MEDIASOUP_CLIENT_ICESERVER_PROTO=udp
+      - MEDIASOUP_CLIENT_ICESERVER_PORT=3478
+      - MEDIASOUP_CLIENT_ICESERVER_USER=test
+      - MEDIASOUP_CLIENT_ICESERVER_PASS=test123
+      - MEDIASOUP_CLIENT_PROTOOPORT=4443
+      - MEDIASOUP_INGRESS_HOST=webrtc.prueba1.2060.io
+    ports:
+      - '4443:4443'
+    volumes:
+      - ./certs/fullchain.pem:/config/certs/fullchain.pem
+      - ./certs/privkey.pem:/config/certs/privkey.pem
+
+  mediasoup2:
+    build: .
+    image: webrtc-server:test
+    container_name: mediasoup2
+    networks:
+      mediasoup_net:
+        ipv4_address: 192.168.10.12
+    environment:
+      - LOG_LEVEL=3
+      - MEDIASOUP_ANNOUNCED_IP=192.168.10.12
+      - PROTOO_LISTEN_PORT=4444
+      - MEDIASOUP_MIN_PORT=41001
+      - MEDIASOUP_MAX_PORT=42000
+      - HTTPS_CERT_FULLCHAIN=/config/certs/fullchain.pem
+      - HTTPS_CERT_PRIVKEY=/config/certs/privkey.pem
+      - REDIS_URL=redis://redis:6379
+      - MEDIASOUP_CLIENT_ENABLE_ICESERVER=no
+      - MEDIASOUP_CLIENT_ICESERVER_HOST=192.168.10.11
+      - MEDIASOUP_CLIENT_ICESERVER_PROTO=udp
+      - MEDIASOUP_CLIENT_ICESERVER_PORT=3478
+      - MEDIASOUP_CLIENT_ICESERVER_USER=test
+      - MEDIASOUP_CLIENT_ICESERVER_PASS=test123
+      - MEDIASOUP_CLIENT_PROTOOPORT=4443
+      - MEDIASOUP_INGRESS_HOST=webrtc.prueba2.2060.io
+    ports:
+      - '4444:4444'
+    volumes:
+      - ./certs/fullchain.pem:/config/certs/fullchain.pem
+      - ./certs/privkey.pem:/config/certs/privkey.pem
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+    restart: always
+    networks:
+      mediasoup_net:
+        ipv4_address: 192.168.10.10
+    ports:
+      - '6379:6379'
+    command: redis-server --maxmemory 64mb --maxmemory-policy allkeys-lru
+
+networks:
+  mediasoup_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.10.0/24

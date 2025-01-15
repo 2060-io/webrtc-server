@@ -1,0 +1,42 @@
+name: Continuous Integration
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, labeled]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout webrtc-server
+        uses: actions/checkout@v4
+
+      - name: Setup node v22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: |
+          yarn install
+
+      - name: Check Format
+        run: |
+          yarn format
+
+      - name: Check Types
+        run: |
+          yarn check-types
+
+      - name: Unit tests
+        run: |
+          yarn test
+
+      - name: E2E tests
+        run: |
+          yarn test:e2e
