@@ -1983,13 +1983,13 @@ export default class RoomClient {
           sctpCapabilities: this._useDataChannel ? this._mediasoupDevice.sctpCapabilities : undefined,
         })
 
-        const { id, iceParameters, iceCandidates, dtlsParameters, sctpParameters, iceServers, iceserver } = transportInfo
+        const { id, iceParameters, iceCandidates, dtlsParameters, sctpParameters, iceServers} = transportInfo
 
         // The activation of the iceServer is modified with the parameters configured on the server,
         // which are sent through the createWebRtcTransport request.
 
-        if (iceServers && iceserver && iceserver.enableIceServer === 'yes') {
-          logger.debug('Turn sendTransport [enableIceServer:"%s"]', iceserver.enableIceServer)
+        if (iceServers) {
+          
           logger.debug('***IceServer SendTransport', iceServers)
 
           this._sendTransport = this._mediasoupDevice.createSendTransport({
@@ -2004,14 +2004,7 @@ export default class RoomClient {
               role: 'auto',
             },
             sctpParameters,
-            iceServers
-            /*iceServers: [
-              {
-                urls: 'turn:' + this._iceServerHost + ':' + this._iceServerPort + '?transport=' + this._iceServerProto,
-                username: this._iceServerUser,
-                credential: this._iceServerPass,
-              },
-            ]*/,
+            iceServers,
             iceTransportPolicy: 'relay',
             proprietaryConstraints: PC_PROPRIETARY_CONSTRAINTS,
             additionalSettings: { encodedInsertableStreams: this._e2eKey && e2e.isSupported() },
@@ -2101,11 +2094,11 @@ export default class RoomClient {
           sctpCapabilities: this._useDataChannel ? this._mediasoupDevice.sctpCapabilities : undefined,
         })
 
-        const { id, iceParameters, iceCandidates, dtlsParameters, sctpParameters, iceServers, iceserver } = transportInfo
+        const { id, iceParameters, iceCandidates, dtlsParameters, sctpParameters, iceServers} = transportInfo
 
 
-        if (iceServers && iceserver && iceserver.enableIceServer === 'yes') {
-          logger.debug('Turn recvTransport [enableIceServer:"%s"]', iceserver.enableIceServer)
+        if (iceServers) {
+
           logger.debug('***IceServer RecvTransport', iceServers)
 
           this._recvTransport = this._mediasoupDevice.createRecvTransport({
@@ -2121,13 +2114,6 @@ export default class RoomClient {
             },
             sctpParameters,
             iceServers,
-            /*iceServers: [
-              {
-                urls: 'turn:' + this._iceServerHost + ':' + this._iceServerPort + '?transport=' + this._iceServerProto,
-                username: this._iceServerUser,
-                credential: this._iceServerPass,
-              },
-            ]*/
             iceTransportPolicy: 'relay',
             additionalSettings: { encodedInsertableStreams: this._e2eKey && e2e.isSupported() },
           })
