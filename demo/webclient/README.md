@@ -1,4 +1,3 @@
-
 # WebRTC Web Client
 
 This is a dockerized version of the Mediasoup web client demo (v3) with ICE server handling, specifically modified for the 2060 project. The primary goal is to decouple the web client from the server, as demonstrated in the original Mediasoup demo.
@@ -10,9 +9,6 @@ For this version, the `RoomClient` module has been refactored to fetch the Media
 To run this client with iceServer, you need an online `Mediasoup Server` with ICE parameters configured. Make sure the server's `config.js` file includes the following settings:
 
 ```javascript
-"iceserver": {
-    "enableIceServer": "yes"
-  },
   "iceServers": [
     {
       "urls": "turn:localhost:3478?transport=udp",
@@ -22,14 +18,18 @@ To run this client with iceServer, you need an online `Mediasoup Server` with IC
   ],
 ```
 
+If the `iceServers` attribute is not configured, the transports will be created directly on the Mediasoup server. Otherwise, the transports will be created through the specified TURN server.
+
 ## Building with Docker
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/2060-io/webrtc-server
    ```
 
 2. Navigate to the `demo/webtc-client` folder:
+
    ```bash
    cd demo/webtc-client
    ```
@@ -56,6 +56,7 @@ To enable HTTPS for Nginx within the Docker container, provide your SSL certific
 - **`certs/privkey.pem`**: Private key file for SSL.
 
 Nginx will reference these certificates in the container as follows:
+
 - `/etc/ssl/certs/fullchain.pem`: Public SSL certificate.
 - `/etc/ssl/private/privkey.pem`: Private key.
 
