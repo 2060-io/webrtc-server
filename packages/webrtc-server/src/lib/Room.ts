@@ -1197,7 +1197,7 @@ export class Room extends EventEmitter {
 
     // Must take the Transport the remote Peer is using for consuming.
     const transport = Array.from(consumerPeer.data.transports.values()).find(
-      (t: mediasoup.types.Transport) => t.appData.consuming,
+      (t) => (t as mediasoup.types.Transport).appData.consuming,
     ) as mediasoup.types.Transport
 
     // This should not happen.
