@@ -35,29 +35,28 @@ You can deploy it using Docker or Kubernetes, with integration of the [Coturn](h
 
 To configure and build the `ICE Server` you can be use following enviroment variables:
 
-| Variable                            | Description                                     | Default Value |
-| ----------------------------------- | ----------------------------------------------- | ------------- |
-| `MEDIASOUP_CLIENT_PROTOOPORT`       | Port used for the connection.                   | `443`         |
-| `MEDIASOUP_CLIENT_ENABLE_ICESERVER` | Enable ICE server mode.                         | `yes`         |
-| `MEDIASOUP_CLIENT_ICESERVER_PROTO`  | Protocol configuration used (e.g., `udp`).      | `udp`         |
-| `MEDIASOUP_CLIENT_ICESERVER_PORT`   | Port set in the TURN server to receive traffic. | `3478`        |
-| `MEDIASOUP_CLIENT_ICESERVER_USER`   | Username for the TURN server.                   |               |
-| `MEDIASOUP_CLIENT_ICESERVER_PASS`   | Password for the TURN server.                   |               |
-| `MEDIASOUP_CLIENT_ICESERVER_HOST`   | Public IP address of the TURN server.           |               |
+| Variable                           | Description                                     | Default Value |
+| ---------------------------------- | ----------------------------------------------- | ------------- |
+| `MEDIASOUP_CLIENT_PROTOOPORT`      | Port used for the connection.                   | `443`         |
+| `MEDIASOUP_CLIENT_ICESERVER_PROTO` | Protocol configuration used (e.g., `udp`).      | `udp`         |
+| `MEDIASOUP_CLIENT_ICESERVER_PORT`  | Port set in the TURN server to receive traffic. | `3478`        |
+| `MEDIASOUP_CLIENT_ICESERVER_USER`  | Username for the TURN server.                   |               |
+| `MEDIASOUP_CLIENT_ICESERVER_PASS`  | Password for the TURN server.                   |               |
+| `MEDIASOUP_CLIENT_ICESERVER_HOST`  | Public IP address of the TURN server.           |               |
 
 Additional variables for configuring the `webrtc-server`:
 
-| Variable                 | Description                                                    | Default Value                       |
-| ------------------------ | -------------------------------------------------------------- | ----------------------------------- |
-| `PROTOO_LISTEN_PORT`     | Port for the protoo WebSocket server and HTTP API server.      | `4443`                              |
-| `HTTPS_CERT_FULLCHAIN`   | Path to the fullchain certificate file for HTTPS.              | `<project_dir>/certs/fullchain.pem` |
-| `HTTPS_CERT_PRIVKEY`     | Path to the private key file for HTTPS.                        | `<project_dir>/certs/privkey.pem`   |
-| `MEDIASOUP_INGRESS_HOST` | Ingress host for the mediasoup client.                         |                                     |
-| `MEDIASOUP_MIN_PORT`     | Minimum port for RTC connections in mediasoup.                 | `40000`                             |
-| `MEDIASOUP_MAX_PORT`     | Maximum port for RTC connections in mediasoup.                 | `49999`                             |
-| `MEDIASOUP_LISTEN_IP`    | IP address for mediasoup WebRTC server to listen on.           | `0.0.0.0` or `127.0.0.1`            |
-| `MEDIASOUP_ANNOUNCED_IP` | Public IP address to be announced for mediasoup WebRTC server. |                                     |
-| `MEDIASOUP_INGRESS_HOST` | Set Ingress host for /getRoomId response                       |                                     |
+| Variable                 | Description                                               | Default Value                       |
+| ------------------------ | --------------------------------------------------------- | ----------------------------------- |
+| `PROTOO_LISTEN_PORT`     | Port for the protoo WebSocket server and HTTP API server. | `4443`                              |
+| `HTTPS_CERT_FULLCHAIN`   | Path to the fullchain certificate file for HTTPS.         | `<project_dir>/certs/fullchain.pem` |
+| `HTTPS_CERT_PRIVKEY`     | Path to the private key file for HTTPS.                   | `<project_dir>/certs/privkey.pem`   |
+| `MEDIASOUP_INGRESS_HOST` | Ingress host for the mediasoup client.                    |                                     |
+| `MEDIASOUP_MIN_PORT`     | Minimum port for RTC connections in mediasoup.            | `40000`                             |
+| `MEDIASOUP_MAX_PORT`     | Maximum port for RTC connections in mediasoup.            | `49999`                             |
+| `MEDIASOUP_LISTEN_IP`    | The listening IP for audio/video in mediasoup.            | `0.0.0.0` or `127.0.0.1`            |
+| `MEDIASOUP_ANNOUNCED_IP` | Public IP address for audio/video in mediasoup..          |                                     |
+| `MEDIASOUP_INGRESS_HOST` | Set Ingress host for /rooms response                      |                                     |
 
 ## Diagram of solution webrtc-server
 
@@ -88,6 +87,7 @@ services:
 
 ```
 git clone https://github.com/2060-io/webrtc-server.git
+cd package/webrtc-server
 docker build . -t 2060-webrtc-server:test
 ```
 
@@ -116,35 +116,6 @@ docker-compose up
 **`IMPORTANT`**, Ensure the Kubernetes load balancer allows UDP traffic to the Coturn service nodes. Set the public IP in the `.env` file as `MEDIASOUP_CLIENT_ICESERVER_HOST` enviroment variable.
 
 ## WebRTC Server API
-
-### GetRoomId
-
-This endpoint was added to the WebRTC server to generate the roomId and the websocket connection that the mobile application will use for communication. **This endpoint has been Deprecated**
-
-Set the mandatory variable MEDIASOUP_INGRESS_HOST with the application's ingress to be used by the endpoint to form the connection wsUrl.
-
-```
-MEDIASOUP_INGRESS_HOST='localhost'
-```
-
-#### Request
-
-- Method: GET
-- Endpoint: `/getRoomId`
-- Port: 443
-
-#### Response
-
-- Status Code: 200 (OK)
-- Body:
-
-```json
-{
-  "roomId": "8c6ljcfc",
-  "wsUrl": "wss://localhost:443?roomId=8c6ljcfc&peerId=",
-  "status": 1
-}
-```
 
 ### Create Rooms
 
@@ -256,14 +227,13 @@ Retrieve ICE Server settings via a peer websocket request to create a WebRTC Tra
 
 ```json
 {
-  "iceServer": {
-    "enableIceServer": "yes",
-    "iceServerHost": "localhost",
-    "iceServerProto": "udp",
-    "iceServerPort": "3478",
-    "iceServerUser": "test",
-    "iceServerPass": "test123"
-  }
+  "iceServers": [
+    {
+      "urls": "turn:localhost:3478?transport=udp",
+      "username": "test",
+      "credential": "test123"
+    }
+  ]
 }
 ```
 

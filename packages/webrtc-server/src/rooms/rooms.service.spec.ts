@@ -1,4 +1,4 @@
-import * as fs from 'fs'
+import fs from 'fs'
 import { RoomsService } from './rooms.service'
 import { Room } from '../lib/Room'
 import * as mediasoup from 'mediasoup'
@@ -6,7 +6,7 @@ import * as protoo from 'protoo-server'
 import { Test } from '@nestjs/testing'
 import { ConfigService } from '@nestjs/config'
 import { HttpException, HttpStatus } from '@nestjs/common'
-import * as url from 'url'
+import url from 'url'
 
 jest.mock('../lib/Room', () => ({
   Room: {

@@ -1,10 +1,10 @@
 import { createServer, Server } from 'https'
 import { ConsoleLogger, INestApplication, ValidationPipe } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
-import * as express from 'express'
+import express from 'express'
 import { ExpressAdapter } from '@nestjs/platform-express'
 import { AppModule } from '../src/app.module'
-import * as request from 'supertest'
+import request from 'supertest'
 import * as selfsigned from 'selfsigned'
 
 jest.setTimeout(20000)
