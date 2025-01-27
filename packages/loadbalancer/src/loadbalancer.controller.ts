@@ -1,22 +1,24 @@
-import { Body, Controller, Get, HttpException, HttpStatus, Logger, Param, Post } from '@nestjs/common'
+import { Body, Controller, Post, HttpException, HttpStatus, Logger, Param } from '@nestjs/common'
 import { LoadbalancerService } from './loadbalancer.service'
-import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger'
-import { CreateRoomDto } from './dto/rooms.dto'
+import { ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger'
+import { CreateRoomDto, ServerData } from './dto/rooms.dto'
 
+@ApiTags('Load Balancer')
 @Controller()
 export class LoadbalancerController {
   private readonly logger = new Logger(LoadbalancerController.name)
+
   constructor(private readonly loadbalancerService: LoadbalancerService) {}
 
   /**
    * Endpoint to create or retrieve a room.
-   * Delegates the logic to the RoomsService.
-   * @param roomId - The ID of the room (optional).
-   * @param createRoomDto - Parameters for room creation (optional).
+   * Delegates the logic to the LoadbalancerService.
+   * @param {string} roomId - The ID of the room (optional).
+   * @param {CreateRoomDto} createRoomDto - Parameters for room creation.
    * @returns {object} - Room details and WebSocket URL.
    */
   @Post(':roomId?')
-  @ApiOperation({ summary: 'Create room' })
+  @ApiOperation({ summary: 'Create or retrieve a room' })
   @ApiParam({
     name: 'roomId',
     description: 'Room identifier (optional)',
@@ -28,14 +30,8 @@ export class LoadbalancerController {
     schema: {
       type: 'object',
       properties: {
-        eventNotificationUri: {
-          type: 'string',
-          example: 'http://example.com/notification',
-        },
-        maxPeerCount: {
-          type: 'number',
-          example: 3,
-        },
+        eventNotificationUri: { type: 'string', example: 'http://example.com/notification' },
+        maxPeerCount: { type: 'number', example: 3 },
       },
     },
   })
@@ -65,17 +61,37 @@ export class LoadbalancerController {
   }
 
   /**
-   * Endpoint para registrar un servidor en el balanceador de carga.
-   * @param {object} serverData - Información del servidor.
-   * @param {string} serverData.serverId - ID único del servidor.
-   * @param {string} serverData.url - URL base del servidor.
-   * @param {number} serverData.capacity - Capacidad máxima del servidor.
+   * Endpoint to register a server with the load balancer.
+   * Registers the server and calculates its capacity based on the workers provided.
+   * @param {ServerData} serverData - Server information.
+   * @returns {Promise<object>} - A success message indicating the server was registered.
    */
   @Post('register')
-  async registerServer(
-    @Body() serverData: { serverId: string; url: string; capacity: number },
-  ): Promise<{ message: string }> {
-    if (!serverData.serverId || !serverData.url || !serverData.capacity) {
+  @ApiOperation({ summary: 'Register a server' })
+  @ApiBody({
+    description: 'Server registration data',
+    schema: {
+      type: 'object',
+      properties: {
+        serverId: { type: 'string', example: 'server-12345' },
+        url: { type: 'string', example: 'http://example.com' },
+        workers: { type: 'number', example: 4 },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Server registered successfully.',
+    schema: {
+      example: { message: 'Server registered successfully' },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid server data.',
+  })
+  async registerServer(@Body() serverData: ServerData): Promise<{ message: string }> {
+    if (!serverData.serverId || !serverData.url || !serverData.workers) {
       throw new HttpException('Invalid server data', HttpStatus.BAD_REQUEST)
     }
 
@@ -84,12 +100,36 @@ export class LoadbalancerController {
   }
 
   /**
-   * Endpoint para notificar el cierre de una sala en un servidor.
-   * @param {object} roomData - Información de la sala.
-   * @param {string} roomData.serverId - ID del servidor donde se cerró la sala.
-   * @param {string} roomData.roomId - ID de la sala que se cerró.
+   * Endpoint to notify the closure of a room on a server.
+   * Updates the server load and removes the room from Redis.
+   * @param {object} roomData - Room information.
+   * @param {string} roomData.serverId - The ID of the server where the room was closed.
+   * @param {string} roomData.roomId - The ID of the room that was closed.
+   * @returns {Promise<object>} - A success message indicating the notification was processed.
    */
   @Post('room-closed')
+  @ApiOperation({ summary: 'Notify room closure' })
+  @ApiBody({
+    description: 'Room closure data',
+    schema: {
+      type: 'object',
+      properties: {
+        serverId: { type: 'string', example: 'server-12345' },
+        roomId: { type: 'string', example: 'room-67890' },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Room closed notification processed successfully.',
+    schema: {
+      example: { message: 'Room closed notification processed successfully' },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Server or room not found.',
+  })
   async notifyRoomClosed(@Body() roomData: { serverId: string; roomId: string }): Promise<{ message: string }> {
     await this.loadbalancerService.roomClosed(roomData)
     return { message: 'Room closed notification processed successfully' }

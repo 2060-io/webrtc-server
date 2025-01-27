@@ -45,7 +45,7 @@ async function bootstrap() {
 
   const configService = app.get(ConfigService)
 
-  const PORT = configService.get('appConfig.port')
+  const PORT = configService.get('appConfig.appPort')
 
   // Start the server
   app.listen(PORT, () => {

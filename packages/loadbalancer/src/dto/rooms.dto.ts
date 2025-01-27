@@ -77,7 +77,7 @@ export class RoomClosedDto {
 export interface ServerData {
   serverId: string
   url: string
-  capacity: number
+  workers: number
 }
 
 /**
@@ -85,6 +85,8 @@ export interface ServerData {
  */
 export interface AvailableServer extends ServerData {
   load: number
+  capacity: number
+  consumers: number
 }
 
 /**
