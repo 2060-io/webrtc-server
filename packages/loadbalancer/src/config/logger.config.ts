@@ -1,10 +1,11 @@
 import { LogLevel, Logger } from '@nestjs/common'
+import { warn } from 'console'
 
 export function getLogLevels(): LogLevel[] {
   const logger = new Logger('getLogLevels')
   const logLevelConfig = parseInt(process.env.LOG_LEVEL, 10) || 1
 
-  const logLevels: LogLevel[] = ['log'] // Default to 'log'
+  const logLevels: LogLevel[] = ['log', 'warn'] // Default to 'log'
 
   // Adjust log levels based on the configuration
   switch (logLevelConfig) {

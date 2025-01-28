@@ -84,9 +84,7 @@ export interface ServerData {
  * Interface for available server
  */
 export interface AvailableServer extends ServerData {
-  load: number
   capacity: number
-  consumers: number
 }
 
 /**

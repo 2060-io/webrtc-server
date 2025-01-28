@@ -25,7 +25,7 @@ export class HttpRequestService {
       try {
         const response = await firstValueFrom(this.httpService.post(uri, data))
         this.logger.log(`[post] Request sent to ${uri}: ${response.status}`)
-        return response.data
+        return response
       } catch (error) {
         this.logger.error(`[post] Failed to send POST request to ${uri}: ${error.message}`)
       }
@@ -45,7 +45,7 @@ export class HttpRequestService {
       try {
         const response = await firstValueFrom(this.httpService.get(uri))
         this.logger.log(`[get] Request sent to ${uri}: ${response.status}`)
-        return response.data
+        return response
       } catch (error) {
         this.logger.error(`[get] Failed to send GET request to ${uri}: ${error.message}`)
         throw error

@@ -35,6 +35,7 @@ export class LoadbalancerService {
 
       // Retrieve the best server based on load
       const bestServer = await this.getBestServer()
+
       if (!bestServer) {
         this.logger.error('[createRoom] No servers available to handle the request.')
         throw new Error('[createRoom] No servers available')
@@ -48,17 +49,26 @@ export class LoadbalancerService {
         maxPeerCount,
       }
 
+      // Construct the URL dynamically based on the presence of roomId
+      const url = roomId ? `${bestServer.url}/rooms/${roomId}` : `${bestServer.url}/rooms`
+
       // Send a POST request to the selected server to create the room
-      const response = await this.httpRequestService.post(`${bestServer.url}/rooms/${roomId}`, roomCreationData)
+      const response = await this.httpRequestService.post(url, roomCreationData)
+
+      // Validate the response
+      if (response.status !== 200) {
+        this.logger.error(`[createRoom] Failed to create room. Response: ${response} `)
+        throw new Error(`[createRoom] Failed to create room on server ${bestServer.url}`)
+      }
 
       this.logger.log(
-        `[createRoom] Room created successfully on server ${bestServer.url}. Response: ${JSON.stringify(response)}`,
+        `[createRoom] Room created successfully on server ${bestServer.url}. Response: ${response.status}`,
       )
       // Update the server load
-      await this.updateLoadServer(bestServer.serverId, roomId, maxPeerCount || 2)
+      await this.updateLoadServer(bestServer.serverId, response.data.roomId, maxPeerCount || 2)
 
       // Return the response containing room details
-      return response
+      return response.data
     } catch (error) {
       this.logger.error(`[createRoom] Error creating or retrieving room: ${error.message}`)
       throw new HttpException({ error: error.message }, HttpStatus.INTERNAL_SERVER_ERROR)
@@ -114,13 +124,12 @@ export class LoadbalancerService {
   }
 
   /**
-   * Retrieves the list of available servers sorted by load.
-   * Load is calculated as the used capacity divided by the maximum capacity.
+   * Retrieves the server with the most capacity among all available servers.
    *
-   * @returns {Promise<AvailableServer[]>} - List of servers with their load and capacity.
-   * @throws {HttpException} - Throws if Redis fails to retrieve server information.
+   * @returns {Promise<AvailableServer>} - The server with the most capacity.
+   * @throws {HttpException} - Throws if no servers are available or Redis fails.
    */
-  public async getAvailableServers(): Promise<AvailableServer[]> {
+  public async getAvailableServers(): Promise<AvailableServer> {
     try {
       this.logger.log('[getAvailableServers] Fetching available servers from Redis.')
       const keys = await this.redisClient.keys('server:*')
@@ -129,11 +138,8 @@ export class LoadbalancerService {
       for (const key of keys) {
         const serverData = await this.redisClient.hgetall(key)
 
-        // Calculate total consumers across all rooms for this server
-        const totalConsumers = await this.calculateConsumersForServer(serverData.serverId)
-
+        // Parse and prepare the server data
         const capacity = Number(serverData.capacity)
-        const load = totalConsumers / capacity
         const workers = Number(serverData.workers)
 
         servers.push({
@@ -141,15 +147,23 @@ export class LoadbalancerService {
           workers,
           url: serverData.url,
           capacity,
-          load,
-          consumers: totalConsumers,
         })
       }
 
-      // Sort servers by load (lower load first)
-      return servers.sort((a, b) => a.load - b.load)
+      if (servers.length === 0) {
+        this.logger.warn('[getAvailableServers] No servers available.')
+        throw new Error('No servers available.')
+      }
+
+      // Find the server with the most capacity
+      const serverWithMostCapacity = servers.reduce((max, server) => (server.capacity > max.capacity ? server : max))
+
+      this.logger.log(
+        `[getAvailableServers] Server with the most capacity: ${JSON.stringify(serverWithMostCapacity, null, 2)}`,
+      )
+      return serverWithMostCapacity
     } catch (error) {
-      this.logger.error(`[getAvailableServers] Failed to retrieve available servers: ${error.message}`)
+      this.logger.error(`[getAvailableServers] Failed to retrieve servers: ${error.message}`)
       throw new HttpException({ error: error.message }, HttpStatus.INTERNAL_SERVER_ERROR)
     }
   }
@@ -163,12 +177,12 @@ export class LoadbalancerService {
   public async getBestServer(): Promise<AvailableServer> {
     try {
       const servers = await this.getAvailableServers()
-      if (servers.length === 0) {
+      if (!servers) {
         this.logger.warn('[getBestServer] No servers available.')
         throw new Error('[getBestServer] No servers available.')
       }
 
-      const bestServer = servers[0] // Select the server with the lowest load
+      const bestServer = servers
       this.logger.log(`[getBestServer] Best server selected: ${JSON.stringify(bestServer)}`)
       return bestServer
     } catch (error) {
@@ -178,27 +192,8 @@ export class LoadbalancerService {
   }
 
   /**
-   * Calculates the total number of consumers for all rooms on a given server.
-   * @param {string} serverId - The ID of the server.
-   * @returns {Promise<number>} - Total number of consumers.
-   */
-  private async calculateConsumersForServer(serverId: string): Promise<number> {
-    const roomKeys = await this.redisClient.keys(`room:${serverId}:*`)
-    let totalConsumers = 0
-
-    for (const roomKey of roomKeys) {
-      const peerCount = await this.redisClient.hget(roomKey, 'peers')
-      if (peerCount) {
-        const peers = Number(peerCount)
-        totalConsumers += peers * (peers - 1) * 2
-      }
-    }
-
-    return totalConsumers
-  }
-
-  /**
    * Registers a WebRTC server in Redis.
+   * If the server is already registered, it removes the old entry before adding the new one.
    * Calculates the server's capacity based on the number of workers and stores it in Redis.
    *
    * @param {ServerData} serverData - The server data to register.
@@ -213,10 +208,18 @@ export class LoadbalancerService {
       throw new HttpException('Invalid server data', HttpStatus.BAD_REQUEST)
     }
 
+    // Check if the server is already registered
+    const key = `server:${serverId}`
+    const exists = await this.redisClient.exists(key)
+
+    if (exists) {
+      this.logger.warn(`Server ${serverId} is already registered. Removing the old entry.`)
+      await this.redisClient.del(key)
+    }
+
     // Calculate maximum capacity based on the number of workers
     const capacity = workers * 500 // 500 consumers per worker
 
-    const key = `server:${serverId}`
     await this.redisClient.hset(
       key,
       'url',
@@ -224,10 +227,14 @@ export class LoadbalancerService {
       'capacity',
       capacity.toString(),
       'rooms',
-      '0', // Initial number of active rooms is 0
+      '0',
+      'workers',
+      workers.toString(),
+      'health',
+      'true',
     )
 
-    this.logger.log(`Server registered: ${JSON.stringify({ serverId, url, workers, capacity })}`)
+    this.logger.log(`Server registered: ${JSON.stringify({ serverId, url, workers, capacity, health: true })}`)
   }
 
   /**

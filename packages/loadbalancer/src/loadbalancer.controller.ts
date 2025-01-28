@@ -17,7 +17,7 @@ export class LoadbalancerController {
    * @param {CreateRoomDto} createRoomDto - Parameters for room creation.
    * @returns {object} - Room details and WebSocket URL.
    */
-  @Post(':roomId?')
+  @Post('rooms/:roomId?')
   @ApiOperation({ summary: 'Create or retrieve a room' })
   @ApiParam({
     name: 'roomId',
@@ -53,6 +53,7 @@ export class LoadbalancerController {
   async createRoom(@Param('roomId') roomId: string, @Body() createRoomDto: CreateRoomDto) {
     const { eventNotificationUri, maxPeerCount } = createRoomDto
     try {
+      this.logger.debug(`Init Controller CreateRomm`)
       return await this.loadbalancerService.createRoom(roomId, eventNotificationUri, maxPeerCount)
     } catch (error) {
       this.logger.error(`${error.message}`)

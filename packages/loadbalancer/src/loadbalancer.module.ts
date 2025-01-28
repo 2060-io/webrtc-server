@@ -5,6 +5,7 @@ import { ConfigModule } from '@nestjs/config'
 import appConfig from './config/app.config'
 import { HandledRedisModule } from './modules/redis.module'
 import { HttpRequestService } from './lib/HttpRequestService'
+import { ServerHealthChecker } from './lib/ServerHealthChecker'
 
 @Module({
   imports: [
@@ -15,6 +16,6 @@ import { HttpRequestService } from './lib/HttpRequestService'
     HandledRedisModule,
   ],
   controllers: [LoadbalancerController],
-  providers: [LoadbalancerService, HttpRequestService],
+  providers: [LoadbalancerService, ServerHealthChecker, HttpRequestService],
 })
 export class LoadbalancerModule {}
