@@ -2,7 +2,7 @@ import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common'
 import { HttpRequestService } from './lib/HttpRequestService'
 import Redis from 'ioredis'
 import { InjectRedis } from '@nestjs-modules/ioredis'
-import { AvailableServer, RoomData, RoomResponse, ServerData } from './dto/rooms.dto'
+import { AvailableServer, RoomData, RoomResponse, ServerData } from './dto/loadbalancer.dto'
 
 @Injectable()
 export class LoadbalancerService {
@@ -50,19 +50,15 @@ export class LoadbalancerService {
       }
 
       // Construct the URL dynamically based on the presence of roomId
-      const url = roomId ? `${bestServer.url}/rooms/${roomId}` : `${bestServer.url}/rooms`
+      const url = roomId ? `${bestServer.serviceUrl}/rooms/${roomId}` : `${bestServer.serviceUrl}/rooms`
 
       // Send a POST request to the selected server to create the room
       const response = await this.httpRequestService.post(url, roomCreationData)
 
-      // Validate the response
-      if (response.status !== 200) {
-        this.logger.error(`[createRoom] Failed to create room. Response: ${response} `)
-        throw new Error(`[createRoom] Failed to create room on server ${bestServer.url}`)
-      }
+      this.logger.debug(`Response.status: ${response.status}`)
 
       this.logger.log(
-        `[createRoom] Room created successfully on server ${bestServer.url}. Response: ${response.status}`,
+        `[createRoom] Room created successfully on server ${bestServer.serviceUrl}. Response: ${response.status}`,
       )
       // Update the server load
       await this.updateLoadServer(bestServer.serverId, response.data.roomId, maxPeerCount || 2)
@@ -124,19 +120,25 @@ export class LoadbalancerService {
   }
 
   /**
-   * Retrieves the server with the most capacity among all available servers.
+   * Retrieves the server with the most capacity among all available servers that are healthy.
    *
-   * @returns {Promise<AvailableServer>} - The server with the most capacity.
-   * @throws {HttpException} - Throws if no servers are available or Redis fails.
+   * @returns {Promise<AvailableServer>} - The healthiest server with the most capacity.
+   * @throws {HttpException} - Throws if no healthy servers are available or Redis fails.
    */
   public async getAvailableServers(): Promise<AvailableServer> {
     try {
-      this.logger.log('[getAvailableServers] Fetching available servers from Redis.')
+      this.logger.log('[getAvailableServers] Fetching available healthy servers from Redis.')
       const keys = await this.redisClient.keys('server:*')
       const servers: AvailableServer[] = []
 
       for (const key of keys) {
         const serverData = await this.redisClient.hgetall(key)
+
+        // Check health status
+        if (serverData.health !== 'true') {
+          this.logger.warn(`[getAvailableServers] Server ${serverData.serverId} is unhealthy, skipping.`)
+          continue
+        }
 
         // Parse and prepare the server data
         const capacity = Number(serverData.capacity)
@@ -145,25 +147,29 @@ export class LoadbalancerService {
         servers.push({
           serverId: key.split(':')[1],
           workers,
-          url: serverData.url,
+          serviceUrl: serverData.serviceUrl,
           capacity,
         })
       }
 
       if (servers.length === 0) {
-        this.logger.warn('[getAvailableServers] No servers available.')
-        throw new Error('No servers available.')
+        this.logger.warn('[getAvailableServers] No healthy servers available.')
+        throw new Error('No healthy servers available.')
       }
 
-      // Find the server with the most capacity
+      // Find the healthy server with the most capacity
       const serverWithMostCapacity = servers.reduce((max, server) => (server.capacity > max.capacity ? server : max))
 
       this.logger.log(
-        `[getAvailableServers] Server with the most capacity: ${JSON.stringify(serverWithMostCapacity, null, 2)}`,
+        `[getAvailableServers] Selected healthiest server with most capacity: ${JSON.stringify(
+          serverWithMostCapacity,
+          null,
+          2,
+        )}`,
       )
       return serverWithMostCapacity
     } catch (error) {
-      this.logger.error(`[getAvailableServers] Failed to retrieve servers: ${error.message}`)
+      this.logger.error(`[getAvailableServers] Failed to retrieve healthy servers: ${error.message}`)
       throw new HttpException({ error: error.message }, HttpStatus.INTERNAL_SERVER_ERROR)
     }
   }
@@ -200,13 +206,7 @@ export class LoadbalancerService {
    * @throws {HttpException} - If the server data is invalid.
    */
   public async registerServer(serverData: ServerData): Promise<void> {
-    const { serverId, url, workers } = serverData
-
-    // Validate input
-    if (!serverId || !url || !workers || workers <= 0) {
-      this.logger.error('Invalid server data provided for registration.')
-      throw new HttpException('Invalid server data', HttpStatus.BAD_REQUEST)
-    }
+    const { serverId, serviceUrl, workers } = serverData
 
     // Check if the server is already registered
     const key = `server:${serverId}`
@@ -222,8 +222,8 @@ export class LoadbalancerService {
 
     await this.redisClient.hset(
       key,
-      'url',
-      url,
+      'serviceUrl',
+      serviceUrl,
       'capacity',
       capacity.toString(),
       'rooms',
@@ -234,7 +234,7 @@ export class LoadbalancerService {
       'true',
     )
 
-    this.logger.log(`Server registered: ${JSON.stringify({ serverId, url, workers, capacity, health: true })}`)
+    this.logger.log(`Server registered: ${JSON.stringify({ serverId, serviceUrl, workers, capacity, health: true })}`)
   }
 
   /**
@@ -242,49 +242,67 @@ export class LoadbalancerService {
    * @param {RoomData} roomData - The data of the room that was closed.
    */
   public async roomClosed(roomData: RoomData): Promise<void> {
-    const serverKey = `server:${roomData.serverId}`
-    const roomKey = `room:${roomData.serverId}:${roomData.roomId}`
+    try {
+      const serverKey = `server:${roomData.serverId}`
+      const roomKey = `room:${roomData.serverId}:${roomData.roomId}`
 
-    // Check if the server exists
-    const serverExists = await this.redisClient.exists(serverKey)
-    if (!serverExists) {
-      this.logger.warn(`[roomClosed] Server ${roomData.serverId} not found in Redis.`)
-      return
-    }
+      // Check if the server exists
+      const serverExists = await this.redisClient.exists(serverKey)
+      if (!serverExists) {
+        this.logger.error(`[roomClosed] Server ${roomData.serverId} not found in Redis.`)
+        throw new HttpException(`Server ${roomData.serverId} not found.`, HttpStatus.NOT_FOUND)
+      }
 
-    // Check if the room exists
-    const roomExists = await this.redisClient.exists(roomKey)
-    if (!roomExists) {
-      this.logger.warn(`[roomClosed] Room ${roomData.roomId} not found on server ${roomData.serverId}.`)
-      return
-    }
+      // Check if the room exists
+      const roomExists = await this.redisClient.exists(roomKey)
+      if (!roomExists) {
+        this.logger.error(`[roomClosed] Room ${roomData.roomId} not found on server ${roomData.serverId}.`)
+        throw new HttpException(
+          `Room ${roomData.roomId} not found on server ${roomData.serverId}.`,
+          HttpStatus.NOT_FOUND,
+        )
+      }
 
-    // Retrieve the number of peers in the room
-    const peerCount = await this.redisClient.hget(roomKey, 'peers')
-    if (!peerCount) {
-      this.logger.warn(`[roomClosed] Peer count not found for room ${roomData.roomId}.`)
-      return
-    }
+      // Retrieve the number of peers in the room
+      const peerCount = await this.redisClient.hget(roomKey, 'peers')
+      if (!peerCount) {
+        this.logger.warn(`[roomClosed] Peer count not found for room ${roomData.roomId}. Defaulting to 0.`)
+        throw new HttpException(`Peer count not found for room ${roomData.roomId}.`, HttpStatus.BAD_REQUEST)
+      }
 
-    // Calculate the total consumers for the room
-    const totalConsumers = Number(peerCount) * (Number(peerCount) - 1) * 2
+      // Calculate the total consumers for the room
+      const peerCountNum = Number(peerCount)
+      if (isNaN(peerCountNum) || peerCountNum <= 0) {
+        this.logger.error(`[roomClosed] Invalid peer count: ${peerCount} for room ${roomData.roomId}.`)
+        throw new HttpException(`Invalid peer count for room ${roomData.roomId}.`, HttpStatus.BAD_REQUEST)
+      }
 
-    // Increment the server capacity
-    await this.redisClient.hincrby(serverKey, 'capacity', totalConsumers)
+      const totalConsumers = peerCountNum * (peerCountNum - 1) * 2
 
-    // Decrement the room count
-    const currentRooms = await this.redisClient.hget(serverKey, 'rooms')
-    if (Number(currentRooms) > 0) {
-      await this.redisClient.hincrby(serverKey, 'rooms', -1)
-      this.logger.log(
-        `[roomClosed] Room ${roomData.roomId} closed on server ${roomData.serverId}. Consumers freed: ${totalConsumers}`,
+      // Restore the server's capacity
+      await this.redisClient.hincrby(serverKey, 'capacity', totalConsumers)
+
+      // Update the room count on the server
+      const currentRooms = await this.redisClient.hget(serverKey, 'rooms')
+      if (!currentRooms) {
+        this.logger.warn(`[roomClosed] Room count not found for server ${roomData.serverId}. Defaulting to 0.`)
+      } else if (Number(currentRooms) > 0) {
+        await this.redisClient.hincrby(serverKey, 'rooms', -1)
+        this.logger.log(
+          `[roomClosed] Room ${roomData.roomId} closed on server ${roomData.serverId}. Consumers freed: ${totalConsumers}`,
+        )
+      } else {
+        this.logger.warn(`[roomClosed] Room count for server ${roomData.serverId} is already at 0.`)
+      }
+
+      // Remove the room data from Redis
+      await this.redisClient.del(roomKey)
+      this.logger.log(`[roomClosed] Room ${roomData.roomId} removed from Redis.`)
+    } catch (error) {
+      this.logger.error(
+        `[roomClosed] Error closing room ${roomData.roomId} on server ${roomData.serverId}: ${error.message}`,
       )
-    } else {
-      this.logger.warn(`[roomClosed] Room count for server ${roomData.serverId} is already 0.`)
+      throw new HttpException({ error: error.message }, HttpStatus.INTERNAL_SERVER_ERROR)
     }
-
-    // Remove room data from Redis
-    await this.redisClient.del(roomKey)
-    this.logger.log(`[roomClosed] Room ${roomData.roomId} removed from Redis.`)
   }
 }

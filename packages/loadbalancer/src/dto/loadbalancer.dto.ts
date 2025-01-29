@@ -74,9 +74,27 @@ export class RoomClosedDto {
 /**
  * Interface for server data
  */
-export interface ServerData {
+export class ServerData {
+  @ApiProperty({
+    description: 'Unique identifier for the server',
+    example: 'server-12345',
+  })
+  @IsString({ message: 'serverId must be a string' })
   serverId: string
-  url: string
+
+  @ApiProperty({
+    description: 'Service URL endpoint where create room',
+    example: 'http://webrtc.example/',
+  })
+  @IsString({ message: 'serviceUrl must be a string' })
+  serviceUrl: string
+
+  @ApiProperty({
+    description: 'Quantity of Workers of the server',
+    example: 4,
+  })
+  @IsInt({ message: 'capacity must be an integer' })
+  @Min(1, { message: 'capacity must be at least 1' })
   workers: number
 }
 

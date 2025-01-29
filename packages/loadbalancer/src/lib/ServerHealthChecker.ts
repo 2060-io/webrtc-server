@@ -18,7 +18,7 @@ export class ServerHealthChecker implements OnModuleInit, OnModuleDestroy {
   ) {
     // Load interval from environment variables or default to 30 seconds
 
-    this.interval = Number(configService.get('appConfig.healthCheckInterval')) || 30000
+    this.interval = Number(this.configService.get('appConfig.healthCheckInterval'))
   }
 
   /**
@@ -67,18 +67,18 @@ export class ServerHealthChecker implements OnModuleInit, OnModuleDestroy {
     const keys = await this.redisClient.keys('server:*')
     for (const key of keys) {
       const serverData = await this.redisClient.hgetall(key)
-      const { url } = serverData
+      const { serviceUrl } = serverData
 
       const serverId = key.split(':')[1]
-      this.logger.debug(`ServerId: ${serverId}, URL: ${url}`)
+      this.logger.debug(`ServerId: ${serverId}, URL: ${serviceUrl}`)
 
-      if (!url) {
+      if (!serviceUrl) {
         this.logger.warn(`Server ${key.split(':')[1]} has no URL registered.`)
         continue
       }
 
       try {
-        const response = await this.httpRequestService.get(`${url}/rooms/12345`)
+        const response = await this.httpRequestService.get(`${serviceUrl}/rooms/12345`)
         if (response.status === 200) {
           await this.redisClient.hset(key, 'health', 'true')
           this.logger.log(`Server ${serverId} is healthy.`)

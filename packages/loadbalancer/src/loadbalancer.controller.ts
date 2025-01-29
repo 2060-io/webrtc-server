@@ -1,7 +1,7 @@
 import { Body, Controller, Post, HttpException, HttpStatus, Logger, Param } from '@nestjs/common'
 import { LoadbalancerService } from './loadbalancer.service'
 import { ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger'
-import { CreateRoomDto, ServerData } from './dto/rooms.dto'
+import { CreateRoomDto, ServerData } from './dto/loadbalancer.dto'
 
 @ApiTags('Load Balancer')
 @Controller()
@@ -53,11 +53,10 @@ export class LoadbalancerController {
   async createRoom(@Param('roomId') roomId: string, @Body() createRoomDto: CreateRoomDto) {
     const { eventNotificationUri, maxPeerCount } = createRoomDto
     try {
-      this.logger.debug(`Init Controller CreateRomm`)
       return await this.loadbalancerService.createRoom(roomId, eventNotificationUri, maxPeerCount)
     } catch (error) {
-      this.logger.error(`${error.message}`)
-      throw new HttpException(`${error.message}`, HttpStatus.INTERNAL_SERVER_ERROR)
+      this.logger.error(`Error createRoom: ${error.message}`)
+      throw new HttpException(`Error createRoom: ${error.message}`, HttpStatus.INTERNAL_SERVER_ERROR)
     }
   }
 
@@ -92,12 +91,13 @@ export class LoadbalancerController {
     description: 'Invalid server data.',
   })
   async registerServer(@Body() serverData: ServerData): Promise<{ message: string }> {
-    if (!serverData.serverId || !serverData.url || !serverData.workers) {
-      throw new HttpException('Invalid server data', HttpStatus.BAD_REQUEST)
+    try {
+      await this.loadbalancerService.registerServer(serverData)
+      return { message: 'Server registered successfully' }
+    } catch (error) {
+      this.logger.error(`Error registerServer: ${error.message}`)
+      throw new HttpException(`Error registerServer: ${error.message}`, HttpStatus.INTERNAL_SERVER_ERROR)
     }
-
-    await this.loadbalancerService.registerServer(serverData)
-    return { message: 'Server registered successfully' }
   }
 
   /**
@@ -132,7 +132,12 @@ export class LoadbalancerController {
     description: 'Server or room not found.',
   })
   async notifyRoomClosed(@Body() roomData: { serverId: string; roomId: string }): Promise<{ message: string }> {
-    await this.loadbalancerService.roomClosed(roomData)
-    return { message: 'Room closed notification processed successfully' }
+    try {
+      await this.loadbalancerService.roomClosed(roomData)
+      return { message: 'Room closed notification processed successfully' }
+    } catch (error) {
+      this.logger.error(`Error notifyRoomClosed: ${error.message}`)
+      throw new HttpException(`Error notifyRoomClosed: ${error.message}`, HttpStatus.INTERNAL_SERVER_ERROR)
+    }
   }
 }
