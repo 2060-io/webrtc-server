@@ -78,7 +78,7 @@ export class ServerHealthChecker implements OnModuleInit, OnModuleDestroy {
       }
 
       try {
-        const response = await this.httpRequestService.get(`${serviceUrl}/rooms/12345`)
+        const response = await this.httpRequestService.get(`${serviceUrl}/rooms/health`)
         if (response.status === 200) {
           await this.redisClient.hset(key, 'health', 'true')
           this.logger.log(`Server ${serverId} is healthy.`)
