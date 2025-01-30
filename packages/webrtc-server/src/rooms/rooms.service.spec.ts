@@ -35,7 +35,21 @@ describe('RoomsService', () => {
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
-      providers: [RoomsService, ConfigService],
+      providers: [
+        {
+          provide: ConfigService,
+          useValue: {
+            get: jest.fn().mockImplementation((key: string) => {
+              const mockConfig = {
+                'appConfig.loadbalancerUrl': 'http://mock-loadbalancer',
+                'appConfig.serviceUrl': 'http://mock-service',
+              }
+              return mockConfig[key] || null
+            }),
+          },
+        },
+        RoomsService,
+      ],
     }).compile()
 
     service = module.get<RoomsService>(RoomsService)
@@ -147,6 +161,7 @@ describe('RoomsService - initServer Protoo', () => {
   let loggerErrorSpy: jest.SpyInstance
   let loggerLogSpy: jest.SpyInstance
   let mockHttpsServer: any
+  let mockConfigService: ConfigService
 
   beforeEach(async () => {
     const mockHttpsOptions = {
@@ -154,7 +169,6 @@ describe('RoomsService - initServer Protoo', () => {
       cert: 'mockCert',
     }
 
-    // Mock the HTTPS server creation
     mockHttpsServer = {
       listen: jest.fn(),
     }
@@ -168,13 +182,22 @@ describe('RoomsService - initServer Protoo', () => {
 
     Reflect.set(global, 'httpServer', mockHttpsServer)
 
+    // Mock de ConfigService
+    mockConfigService = {
+      get: jest.fn().mockImplementation((key: string) => {
+        const mockConfig = {
+          'appConfig.loadbalancerUrl': 'http://mock-loadbalancer',
+          'appConfig.serviceUrl': 'http://mock-service',
+        }
+        return mockConfig[key] || null
+      }),
+    } as unknown as ConfigService
+
     const module = await Test.createTestingModule({
-      providers: [RoomsService],
+      providers: [RoomsService, { provide: ConfigService, useValue: mockConfigService }],
     }).compile()
 
     service = module.get<RoomsService>(RoomsService)
-
-    // Spies for logger
     loggerErrorSpy = jest.spyOn(service['logger'], 'error').mockImplementation()
     loggerLogSpy = jest.spyOn(service['logger'], 'log').mockImplementation()
   })
@@ -187,7 +210,6 @@ describe('RoomsService - initServer Protoo', () => {
   it('should initialize the WebSocket server successfully and log the success message', () => {
     service['initServer']()
 
-    // Validate that the WebSocket server was initialized with the correct parameters
     expect(protoo.WebSocketServer).toHaveBeenCalledWith(mockHttpsServer, {
       maxReceivedFrameSize: 960000,
       maxReceivedMessageSize: 960000,
@@ -195,10 +217,10 @@ describe('RoomsService - initServer Protoo', () => {
       fragmentationThreshold: 960000,
     })
 
-    // Validate that the success log was called
     expect(loggerLogSpy).toHaveBeenCalledTimes(1)
     expect(loggerLogSpy).toHaveBeenCalledWith('[Protoo-server] WebSocket initialized.')
   })
+
   describe('onModuleInit', () => {
     it('should initialize the WebSocket server and handle connection requests', async () => {
       const mockOn = jest.fn()
@@ -238,7 +260,6 @@ describe('RoomsService - initServer Protoo', () => {
         `protoo connection request [roomId:testRoom, peerId:testPeer, address:127.0.0.1, origin:testOrigin]`,
       )
     })
-
     it('should log an error if handleConnection fails', async () => {
       const mockOn = jest.fn()
       const mockProtooServer = {

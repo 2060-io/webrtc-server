@@ -22,6 +22,30 @@ export class RoomsController {
   constructor(private readonly roomsService: RoomsService) {}
 
   /**
+   * Health check endpoint for the WebRTC Server.
+   * - Used by the Load Balancer's `ServerHealthChecker` to verify server availability.
+   * - Returns `200 OK` if the WebRTC server is running correctly.
+   * - Can be expanded to check additional dependencies (e.g., WebRTC workers, database connections).
+   *
+   * @returns {Promise<{ status: string }>} - Returns `{ status: 'ok' }` if the server is healthy.
+   */
+  @Get('health')
+  @ApiOperation({ summary: 'Health Check', description: 'Checks if the WebRTC server is running.' })
+  @ApiResponse({
+    status: 200,
+    description: 'The server is healthy.',
+    schema: { example: { status: 'ok' } },
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Server error or dependency failure.',
+  })
+  async checkHealth(): Promise<{ status: string }> {
+    this.logger.debug('Health check requested')
+    return this.roomsService.getHealthStatus()
+  }
+
+  /**
    * Endpoint to create or retrieve a room.
    * Delegates the logic to the RoomsService.
    * @param roomId - The ID of the room (optional).

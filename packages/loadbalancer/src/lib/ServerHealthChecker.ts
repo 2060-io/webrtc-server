@@ -3,7 +3,6 @@ import Redis from 'ioredis'
 import { InjectRedis } from '@nestjs-modules/ioredis'
 import { HttpRequestService } from './HttpRequestService'
 import { ConfigService } from '@nestjs/config'
-import { Server } from 'https'
 
 @Injectable()
 export class ServerHealthChecker implements OnModuleInit, OnModuleDestroy {

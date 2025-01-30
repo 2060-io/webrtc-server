@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { IsString, IsUrl, IsInt, IsUUID, Min, IsOptional } from 'class-validator'
+import { IsString, IsUrl, IsInt, Min, IsOptional } from 'class-validator'
 
 /**
  * DTO for creating a room

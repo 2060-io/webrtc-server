@@ -46,17 +46,19 @@ To configure and build the `ICE Server` you can be use following enviroment vari
 
 Additional variables for configuring the `webrtc-server`:
 
-| Variable                 | Description                                               | Default Value                       |
-| ------------------------ | --------------------------------------------------------- | ----------------------------------- |
-| `PROTOO_LISTEN_PORT`     | Port for the protoo WebSocket server and HTTP API server. | `4443`                              |
-| `HTTPS_CERT_FULLCHAIN`   | Path to the fullchain certificate file for HTTPS.         | `<project_dir>/certs/fullchain.pem` |
-| `HTTPS_CERT_PRIVKEY`     | Path to the private key file for HTTPS.                   | `<project_dir>/certs/privkey.pem`   |
-| `MEDIASOUP_INGRESS_HOST` | Ingress host for the mediasoup client.                    |                                     |
-| `MEDIASOUP_MIN_PORT`     | Minimum port for RTC connections in mediasoup.            | `40000`                             |
-| `MEDIASOUP_MAX_PORT`     | Maximum port for RTC connections in mediasoup.            | `49999`                             |
-| `MEDIASOUP_LISTEN_IP`    | The listening IP for audio/video in mediasoup.            | `0.0.0.0` or `127.0.0.1`            |
-| `MEDIASOUP_ANNOUNCED_IP` | Public IP address for audio/video in mediasoup..          |                                     |
-| `MEDIASOUP_INGRESS_HOST` | Set Ingress host for /rooms response                      |                                     |
+| Variable                 | Description                                                                                              | Default Value                       |
+| ------------------------ | -------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| `PROTOO_LISTEN_PORT`     | Port for the protoo WebSocket server and HTTP API server.                                                | `4443`                              |
+| `HTTPS_CERT_FULLCHAIN`   | Path to the fullchain certificate file for HTTPS.                                                        | `<project_dir>/certs/fullchain.pem` |
+| `HTTPS_CERT_PRIVKEY`     | Path to the private key file for HTTPS.                                                                  | `<project_dir>/certs/privkey.pem`   |
+| `MEDIASOUP_INGRESS_HOST` | Ingress host for the mediasoup client.                                                                   |                                     |
+| `MEDIASOUP_MIN_PORT`     | Minimum port for RTC connections in mediasoup.                                                           | `40000`                             |
+| `MEDIASOUP_MAX_PORT`     | Maximum port for RTC connections in mediasoup.                                                           | `49999`                             |
+| `MEDIASOUP_LISTEN_IP`    | The listening IP for audio/video in mediasoup.                                                           | `0.0.0.0` or `127.0.0.1`            |
+| `MEDIASOUP_ANNOUNCED_IP` | Public IP address for audio/video in mediasoup..                                                         |                                     |
+| `MEDIASOUP_INGRESS_HOST` | Set Ingress host for /rooms response                                                                     |                                     |
+| `LOADBALANCER_URL`       | Specifies the URL of the load balancer responsible for distributing WebRTC rooms among available servers |                                     |
+| `SERVICE_URL`            | Defines the base URL of the WebRTC server that registers itself with the load balancer                   |                                     |
 
 ## Diagram of solution webrtc-server
 

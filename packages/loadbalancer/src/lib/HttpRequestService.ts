@@ -3,6 +3,7 @@ import { HttpService } from '@nestjs/axios'
 import { firstValueFrom } from 'rxjs'
 import { AxiosInstance } from 'axios'
 import axios from 'axios'
+import https from 'https'
 
 @Injectable()
 export class HttpRequestService {
@@ -10,7 +11,12 @@ export class HttpRequestService {
   private readonly httpService: HttpService
 
   constructor() {
-    const axiosInstance: AxiosInstance = axios.create()
+    const axiosInstance: AxiosInstance = axios.create({
+      httpsAgent: new https.Agent({
+        rejectUnauthorized: false,
+      }),
+    })
+
     this.httpService = new HttpService(axiosInstance)
   }
 
@@ -27,7 +33,7 @@ export class HttpRequestService {
         this.logger.log(`[post] Request sent to ${uri}: ${response.status}`)
         return response
       } catch (error) {
-        this.logger.error(`[post] Failed to send POST request to ${uri}: ${error.message}`)
+        this.logger.error(`[post] Failed to send POST request to ${uri}: ${error}`)
       }
     } else {
       this.logger.warn(`[post] URI is not defined, cannot send POST request: ${JSON.stringify(data)}`)
@@ -47,7 +53,7 @@ export class HttpRequestService {
         this.logger.log(`[get] Request sent to ${uri}: ${response.status}`)
         return response
       } catch (error) {
-        this.logger.error(`[get] Failed to send GET request to ${uri}: ${error.message}`)
+        this.logger.error(`[get] Failed to send GET request to ${uri}: ${error}`)
         throw error
       }
     } else {

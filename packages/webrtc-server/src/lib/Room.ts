@@ -195,6 +195,15 @@ export class Room extends EventEmitter {
         }
 
         await this.notificationService.sendNotification(eventNotificationUri, joinNotificationData)
+
+        if (process.env.LOADBALANCER_URL) {
+          this.logger.debug(`**Send notification loadBalancer***`)
+          const loadbalancerUrl = `${process.env.LOADBALANCER_URL}/room-closed`
+          await this.notificationService.post(loadbalancerUrl, {
+            serverId: config.https.ingressHost,
+            roomId: this.roomId,
+          })
+        }
       }
 
       // If the Peer was joined, notify all Peers.

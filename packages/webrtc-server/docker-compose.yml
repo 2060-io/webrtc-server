@@ -5,27 +5,32 @@ services:
     image: webrtc-server:test
     environment:
       - LOG_LEVEL=3
-      - MEDIASOUP_ANNOUNCED_IP=192.168.100.84
-      - MEDIASOUP_LISTEN_IP=192.168.100.84
+      - MEDIASOUP_ANNOUNCED_IP=192.168.10.18
+      - MEDIASOUP_LISTEN_IP=0.0.0.0
       - PROTOO_LISTEN_PORT=4443
       - MEDIASOUP_MIN_PORT=40000
       - MEDIASOUP_MAX_PORT=50000
       - HTTPS_CERT_FULLCHAIN=/config/certs/fullchain.pem
       - HTTPS_CERT_PRIVKEY=/config/certs/privkey.pem
       - MEDIASOUP_CLIENT_ENABLE_ICESERVER=yes
-      - MEDIASOUP_CLIENT_ICESERVER_HOST=192.168.100.84
+      - MEDIASOUP_CLIENT_ICESERVER_HOST=192.168.10.18
       - MEDIASOUP_CLIENT_ICESERVER_PROTO=udp
       - MEDIASOUP_CLIENT_ICESERVER_PORT=3478
       - MEDIASOUP_CLIENT_ICESERVER_USER=test
       - MEDIASOUP_CLIENT_ICESERVER_PASS=test123
-      - MEDIASOUP_CLIENT_PROTOOPORT=4443
+      - MEDIASOUP_CLIENT_PROTOOPORT=443
       - MEDIASOUP_INGRESS_HOST=webrtc.prueba.2060.io
       - REDIS_URL=redis://redis:6379
+      - LOADBALANCER_URL=http://192.168.10.18:3000
+      - SERVICE_URL=https://192.168.10.18
     ports:
-      - '4443:4443'
+      - '443:4443'
+    networks:
+      - webrtc_network
     volumes:
       - ./certs/fullchain.pem:/config/certs/fullchain.pem
       - ./certs/privkey.pem:/config/certs/privkey.pem
+
   coturn:
     image: coturn/coturn
     environment:
@@ -35,11 +40,9 @@ services:
     ports:
       - '3478:3478'
       - '3478:3478/udp'
+    networks:
+      - webrtc_network
 
-  redis:
-    container_name: redis
-    image: redis:alpine
-    restart: always
-    ports:
-      - 6379:6379
-    command: redis-server --maxmemory 64mb --maxmemory-policy allkeys-lru
+networks:
+  webrtc_network:
+    driver: bridge

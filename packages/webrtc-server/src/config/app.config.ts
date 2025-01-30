@@ -40,4 +40,21 @@ export default registerAs('appConfig', () => ({
    * @type {string | undefined}
    */
   redisNatmap: process.env.REDIS_NATMAP,
+
+  /**
+   * Load balancer base URL.
+   * Specifies the URL of the load balancer responsible for distributing WebRTC rooms among available servers.
+   * - Must be a valid URL.
+   * - Typically, this is the entry point for WebRTC server registration and room allocation.
+   * - Example: "http://loadbalancer.example.com"
+   */
+  loadbalancerUrl: process.env.LOADBALANCER_URL,
+
+  /**
+   * URL of the current service instance.
+   * - Defines the base URL of the WebRTC service or application that registers itself with the load balancer.
+   * - Used for health checks and room allocation.
+   * - Example: `http://webrtc-service.example.com`
+   */
+  serviceUrl: process.env.SERVICE_URL,
 }))

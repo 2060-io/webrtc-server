@@ -1,5 +1,4 @@
 import { LogLevel, Logger } from '@nestjs/common'
-import { warn } from 'console'
 
 export function getLogLevels(): LogLevel[] {
   const logger = new Logger('getLogLevels')
