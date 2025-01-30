@@ -14,7 +14,7 @@
   },
   "scripts": {
     "build": "nest build",
-    "format": "prettier --write \"packages/**/*.ts\" \"libs/**/*.ts\"",
+    "format": "prettier --write \"packages/**/*.ts\"",
     "check-types": "eslint \"{src,packages,libs,test}/**/*.ts\" --ignore-pattern demo/",
     "start": "nest start",
     "start:dev": "LOG_LEVEL=3 nest start --watch",
