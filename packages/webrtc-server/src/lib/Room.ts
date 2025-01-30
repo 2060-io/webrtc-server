@@ -195,6 +195,15 @@ export class Room extends EventEmitter {
         }
 
         await this.notificationService.sendNotification(eventNotificationUri, joinNotificationData)
+
+        if (process.env.LOADBALANCER_URL) {
+          this.logger.debug(`**Send notification loadBalancer***`)
+          const loadbalancerUrl = `${process.env.LOADBALANCER_URL}/room-closed`
+          await this.notificationService.post(loadbalancerUrl, {
+            serverId: config.https.ingressHost,
+            roomId: this.roomId,
+          })
+        }
       }
 
       // If the Peer was joined, notify all Peers.
@@ -1197,7 +1206,7 @@ export class Room extends EventEmitter {
 
     // Must take the Transport the remote Peer is using for consuming.
     const transport = Array.from(consumerPeer.data.transports.values()).find(
-      (t: mediasoup.types.Transport) => t.appData.consuming,
+      (t) => (t as mediasoup.types.Transport).appData.consuming,
     ) as mediasoup.types.Transport
 
     // This should not happen.

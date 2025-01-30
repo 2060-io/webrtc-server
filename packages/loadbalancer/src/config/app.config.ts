@@ -40,4 +40,12 @@ export default registerAs('appConfig', () => ({
    * @type {string | undefined}
    */
   redisNatmap: process.env.REDIS_NATMAP,
+
+  /**
+   * Interval for health checks in milliseconds.
+   * Defines how frequently the application will perform health checks on registered servers.
+   * - Default: 30000 ms (30 seconds).
+   * - Can be overridden by setting the environment variable `HEALTH_CHECK_INTERVAL`.
+   */
+  healthCheckInterval: process.env.HEALTH_CHECK_INTERVAL || 30000,
 }))

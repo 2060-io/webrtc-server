@@ -10,6 +10,7 @@ export const config = {
       key: process.env.HTTPS_CERT_PRIVKEY || `${__dirname}/certs/privkey.pem`,
     },
     ingressHost: process.env.MEDIASOUP_INGRESS_HOST,
+    protooPort: process.env.MEDIASOUP_CLIENT_PROTOOPORT,
   },
   iceServers: [
     {

@@ -24,6 +24,7 @@ import * as protoo from 'protoo-server'
 import * as url from 'url'
 import { Server } from 'https'
 import { NotificationService } from '../lib/notification.service'
+import { ConfigService } from '@nestjs/config'
 
 @Injectable()
 export class RoomsService implements OnModuleInit, OnModuleDestroy {
@@ -37,7 +38,7 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
   private protooServer: protoo.WebSocketServer
   private httpServer: Server
 
-  constructor() {
+  constructor(private readonly configService: ConfigService) {
     this.notificationService = new NotificationService()
   }
 
@@ -46,6 +47,11 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
     this.logger.log('[Protoo-server] WebSocket initializing.')
 
     this.initServer()
+
+    // Register WebRTC Load Balancer
+    if (this.configService.get('appConfig.loadbalancerUrl')) {
+      this.registerLoadbalancer()
+    }
 
     //Handle connections from clients
     this.protooServer.on('connectionrequest', (info, accept, reject) => {
@@ -98,7 +104,7 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
    * Initializes the WebSocket server with specific configurations.
    * Sets up the server to listen on the specified port and defines a custom error.
    */
-  private initServer(): void {
+  private async initServer(): Promise<void> {
     try {
       this.httpServer = Reflect.get(global, 'httpServer')
 
@@ -118,6 +124,33 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
     } catch (error) {
       this.logger.error('Error during Protoo server initialization', error.stack)
       throw error
+    }
+  }
+
+  private async registerLoadbalancer(): Promise<void> {
+    this.logger.log(`[registerLoadbalancer] WebRTC LoadBalancer mode enabled.`)
+    const loadbalancerUrl = `${this.configService.get('appConfig.loadbalancerUrl')}/register`
+    const serviceUrl = this.configService.get('appConfig.serviceUrl')
+
+    if (loadbalancerUrl && serviceUrl) {
+      const dataRegister = {
+        serverId: config.https.ingressHost,
+        serviceUrl,
+        workers: config.mediasoup.numWorkers,
+      }
+
+      try {
+        await this.notificationService.post(loadbalancerUrl, dataRegister)
+        this.logger.log(`[registerLoadbalancer] Successfully registered WebRTC server with Load Balancer.`)
+      } catch (error) {
+        this.logger.error(
+          `[registerLoadbalancer] Failed to register with WebRTC Load Balancer at ${loadbalancerUrl}: ${error.message}`,
+        )
+      }
+    } else {
+      this.logger.warn(
+        `[registerLoadbalancer] LoadBalancer registration skipped: Missing loadbalancerUrl or serviceUrl.`,
+      )
     }
   }
 
@@ -325,7 +358,7 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
       const roomIdToUse = roomId ?? this.generateRandomRoomId()
 
       // Get WebSocket connection parameters
-      const port = config.https.listenPort
+      const port = config.https.protooPort
       const announcedIp = config.https.ingressHost
       const wsUrl = `wss://${announcedIp}:${port}`
 
@@ -605,5 +638,16 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
    */
   private getRoomById(roomId: string): Room | undefined {
     return this.rooms.get(roomId)
+  }
+
+  /**
+   * Returns the health status of the WebRTC server.
+   * - If this endpoint is accessible, the server is considered "healthy".
+   * - Additional checks (e.g., WebRTC workers, database connections) can be added later.
+   *
+   * @returns {{ status: string }} - Always returns `{ status: 'ok' }` for now.
+   */
+  public getHealthStatus(): { status: string } {
+    return { status: 'ok' }
   }
 }

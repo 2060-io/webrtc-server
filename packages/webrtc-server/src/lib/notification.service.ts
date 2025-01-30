@@ -39,4 +39,25 @@ export class NotificationService {
       )
     }
   }
+
+  /**
+   * Sends a POST request to the specified URI with the given data.
+   *
+   * @param {string} uri - The URI to which the POST request will be sent.
+   * @param {Object} data - The payload to send in the POST request body.
+   */
+  public async post(uri: string, data: object): Promise<any> {
+    if (uri) {
+      try {
+        const response = await firstValueFrom(this.httpService.post(uri, data))
+        this.logger.log(`[post] Request sent to ${uri}: ${response.status}`)
+        return response
+      } catch (error) {
+        this.logger.error(`[post] Failed to send POST request to ${uri}: ${error.message}`)
+        return error
+      }
+    } else {
+      this.logger.warn(`[post] URI is not defined, cannot send POST request: ${JSON.stringify(data)}`)
+    }
+  }
 }
