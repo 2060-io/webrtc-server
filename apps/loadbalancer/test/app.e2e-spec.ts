@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing'
 import { INestApplication } from '@nestjs/common'
-import { LoadbalancerModule } from './../src/loadbalancer.module'
+import { LoadbalancerModule } from '../src/loadbalancer.module'
 
 describe('AppController (e2e)', () => {
   let app: INestApplication

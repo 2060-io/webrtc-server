@@ -17,6 +17,7 @@ export const config = {
       urls: `turn:${process.env.MEDIASOUP_CLIENT_ICESERVER_HOST}:${process.env.MEDIASOUP_CLIENT_ICESERVER_PORT}?transport=${process.env.MEDIASOUP_CLIENT_ICESERVER_PROTO}`,
       username: process.env.MEDIASOUP_CLIENT_ICESERVER_USER,
       credential: process.env.MEDIASOUP_CLIENT_ICESERVER_PASS,
+      credentialType: 'password',
     },
   ],
   // mediasoup settings.

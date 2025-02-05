@@ -6,10 +6,10 @@
   "bump-minor-pre-major": true,
   "bump-patch-for-minor-pre-major": true,
   "packages": {
-    "packages/loadbalancer": {
+    "apps/loadbalancer": {
       "release-type": "node"
     },
-    "packages/webrtc-server": {
+    "apps/webrtc-server": {
       "release-type": "node"
     }
   },

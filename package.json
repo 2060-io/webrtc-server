@@ -6,7 +6,7 @@
   "private": true,
   "license": "Apache-2.0",
   "workspaces": [
-    "packages/*"
+    "apps/*"
   ],
   "repository": {
     "url": "https://github.com/2060-io/webrtc-server",
@@ -14,18 +14,18 @@
   },
   "scripts": {
     "build": "nest build",
-    "format": "prettier --write \"packages/**/*.ts\"",
-    "check-types": "eslint \"{src,packages,libs,test}/**/*.ts\" --ignore-pattern demo/",
+    "format": "prettier --write \"apps/**/*.ts\"",
+    "check-types": "eslint \"{src,apps,libs,test}/**/*.ts\" --ignore-pattern demo/",
     "start": "nest start",
     "start:dev": "LOG_LEVEL=3 nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/packages/webrtc-server/main",
+    "start:prod": "node dist/apps/webrtc-server/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest --config jest.config.ts",
     "test:watch": "jest --watch --config jest.config.ts",
     "test:cov": "jest --coverage --config jest.config.ts",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand --config jest.config.ts",
-    "test:e2e": "jest --config ./packages/webrtc-server/test/jest-e2e.json"
+    "test:e2e": "jest --config ./apps/webrtc-server/test/jest-e2e.json"
   },
   "dependencies": {
     "@nestjs-modules/ioredis": "^2.0.2",

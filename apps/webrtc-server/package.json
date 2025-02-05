@@ -8,11 +8,11 @@
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\"",
-    "check-types": "eslint \"{src,packages,libs,test}/**/*.ts\" --ignore-pattern demo/",
+    "check-types": "eslint \"{src,apps,libs,test}/**/*.ts\" --ignore-pattern demo/",
     "start": "nest start",
     "start:dev": "LOG_LEVEL=3 nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/packages/webrtc-server/main",
+    "start:prod": "node dist/apps/webrtc-server/main",
     "lint": "eslint \"{src,test}/**/*.ts\" --fix",
     "test": "jest --config jest.config.ts",
     "test:watch": "jest --watch --config jest.config.ts",
