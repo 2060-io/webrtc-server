@@ -7,7 +7,6 @@
   "license": "Apache-2.0",
   "scripts": {
     "build": "nest build",
-    "format": "prettier --write \"src/**/*.ts\"",
     "check-types": "eslint \"{src,apps,libs,test}/**/*.ts\" --ignore-pattern demo/",
     "start": "nest start",
     "start:dev": "LOG_LEVEL=3 nest start --watch",
