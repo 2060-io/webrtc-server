@@ -1,12 +1,12 @@
 # Load Balancer for WebRTC Mediasoup Servers
 
-## 🚀 Overview
+## Overview
 
 This project implements a **load balancer** for WebRTC **Mediasoup** servers. It enables **automatic server registration**, **health monitoring**, and **dynamic load balancing** to efficiently distribute WebRTC rooms among the available servers, ensuring a scalable and robust architecture.
 
 ---
 
-## ⚡ **Key Features**
+## **Key Features**
 
 ### **Server Registration**
 
@@ -36,9 +36,49 @@ This project implements a **load balancer** for WebRTC **Mediasoup** servers. It
 
 ---
 
-## 📌 **Endpoints**
+## **Architecture & Implementation**
 
-### ✅ **Register a WebRTC Server**
+### **1. Server Registration Flow**
+
+1. A Mediasoup server sends a `POST /register` request.
+2. If the server is already registered, its entry is removed and re-added.
+3. The server’s total capacity is calculated (`workers × 500` consumers).
+4. The server is stored in Redis with `health: true`.
+
+![Server Registration](docs/server-registration.png)
+
+### **2. Health Check Process**
+
+1. Every **30 seconds** (or as defined in `HEALTH_CHECK_INTERVAL`), the system checks all registered servers.
+2. A `GET /health` request is sent to each server.
+3. If the server is **healthy**, its `health` status remains `true`.
+4. If the server is **unhealthy**, its `health` status is updated to `false`.
+
+![Health Check Process](docs/health-check-process.png)
+
+### **3. Room Allocation Flow**
+
+1. A client requests to **create a room** (`POST rooms/:roomId?`).
+2. The load balancer filters out **unhealthy servers**.
+3. The server with the **highest available capacity** is selected.
+4. The expected consumers for the room are **subtracted** from the server’s capacity.
+5. The room is created, and the WebSocket URL is returned.
+
+![Room Allocation Flow](docs/room-allocation-flow.png)
+
+### **4. Room Closure Flow**
+
+1. When a room is **closed** within the WebRTC server and the load balancer mode is active, the server sends a `POST /room-closed` notification (webhook) to the load balancer, informing that the roomId has been closed.
+2. The number of consumers freed is **added back** to the server’s available capacity.
+3. The room entry is **deleted** from Redis.
+
+![Room Closure Flow](docs/room-closure-flow.png)
+
+---
+
+## **Endpoints**
+
+### **Register a WebRTC Server**
 
 Registers a new Mediasoup server, calculating its total capacity.
 
@@ -62,7 +102,7 @@ Registers a new Mediasoup server, calculating its total capacity.
 
 ---
 
-### ✅ **Create or Retrieve a Room**
+### **Create Room**
 
 Selects the most capable healthy server and assigns the room.
 
@@ -89,7 +129,7 @@ Selects the most capable healthy server and assigns the room.
 
 ---
 
-### ✅ **Notify Room Closure**
+### **Notify Room Closure**
 
 Updates the server's available capacity when a room is closed.
 
@@ -114,7 +154,7 @@ Updates the server's available capacity when a room is closed.
 
 ---
 
-## ⚙️ **Configuration**
+## **Configuration**
 
 The application uses **environment variables** for configuration.
 
@@ -124,38 +164,6 @@ The application uses **environment variables** for configuration.
 | `LOG_LEVEL`             | Define log level of the application. 1 to          | `1`                      |
 | `REDIS_URL`             | Redis connection URL                               | `redis://localhost:6379` |
 | `HEALTH_CHECK_INTERVAL` | Health check webrtc-server frequency (ms).         | `30000`                  |
-
----
-
-## 🏗️ **Architecture & Implementation**
-
-### 🔹 **1. Server Registration Flow**
-
-1. A Mediasoup server sends a `POST /register` request.
-2. If the server is already registered, its entry is removed and re-added.
-3. The server’s total capacity is calculated (`workers × 500` consumers).
-4. The server is stored in Redis with `health: true`.
-
-### 🔹 **2. Health Check Process**
-
-1. Every **30 seconds** (or as defined in `HEALTH_CHECK_INTERVAL`), the system checks all registered servers.
-2. A `GET /health` request is sent to each server.
-3. If the server is **healthy**, its `health` status remains `true`.
-4. If the server is **unhealthy**, its `health` status is updated to `false`.
-
-### 🔹 **3. Room Allocation Flow**
-
-1. A client requests to **create a room** (`POST rooms/:roomId?`).
-2. The load balancer filters out **unhealthy servers**.
-3. The server with the **highest available capacity** is selected.
-4. The expected consumers for the room are **subtracted** from the server’s capacity.
-5. The room is created, and the WebSocket URL is returned.
-
-### 🔹 **4. Room Closure Flow**
-
-1. When a room is **closed**, a `POST /room-closed` request is sent.
-2. The number of consumers freed is **added back** to the server’s available capacity.
-3. The room entry is **deleted** from Redis.
 
 ---
 
