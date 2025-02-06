@@ -1,0 +1,11 @@
+@startuml
+title Room Closure Flow
+
+
+
+Agent -> MediasoupServer: Close Room
+Webrtc-Server -> LoadBalancer: POST /room-closed
+LoadBalancer -> Redis: Add back available capacity
+LoadBalancer -> Redis: Remove room entry
+
+@enduml

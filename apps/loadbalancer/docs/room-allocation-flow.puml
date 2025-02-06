@@ -1,0 +1,13 @@
+@startuml
+title Room Allocation Flow
+
+
+Agent -> LoadBalancer: POST /rooms/:roomId?
+LoadBalancer -> Redis: Fetch list of available servers
+LoadBalancer -> LoadBalancer: Filter out unhealthy servers
+LoadBalancer -> LoadBalancer: Select server with highest available capacity
+LoadBalancer -> Webrtc-Server: Create Room
+LoadBalancer -> Redis: Update server capacity
+LoadBalancer -> Agent: Return WebSocket URL
+
+@enduml

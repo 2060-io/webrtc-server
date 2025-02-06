@@ -45,7 +45,7 @@ This project implements a **load balancer** for WebRTC **Mediasoup** servers. It
 3. The server’s total capacity is calculated (`workers × 500` consumers).
 4. The server is stored in Redis with `health: true`.
 
-![Server Registration](docs/server-registration.png)
+![Server Registration](docs/server-registration-flow.png)
 
 ### **2. Health Check Process**
 

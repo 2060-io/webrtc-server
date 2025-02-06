@@ -1,0 +1,13 @@
+@startuml
+title Health Check Process
+
+Loop Every 30 seconds (HEALTH_CHECK_INTERVAL)
+    LoadBalancer -> Webrtc-Server: GET /health
+    alt Server is healthy
+        LoadBalancer -> Redis: Update health: true
+    else Server is unhealthy
+        LoadBalancer -> Redis: Update health: false
+    end
+end
+
+@enduml
