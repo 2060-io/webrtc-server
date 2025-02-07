@@ -1,0 +1,13 @@
+@startuml
+title Server Registration Flow
+
+
+entryspacing 1.1
+webrtc-server -> LoadBalancer: POST /register
+alt Server already registered
+    LoadBalancer -> Redis: Remove existing entry
+end
+LoadBalancer -> LoadBalancer: Calculate capacity (workers × 500)
+LoadBalancer -> Redis: Store server data (health: true)
+
+@enduml

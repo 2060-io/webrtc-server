@@ -1,0 +1,4 @@
+{
+  "apps/loadbalancer": "0.0.1",
+  "apps/webrtc-server": "0.0.1"
+}

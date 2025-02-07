@@ -3,25 +3,22 @@ name: Continuous Deployment
 on:
   push:
     branches: [main, 'release/**']
-
   workflow_dispatch:
 
 env:
-  DH_USERNAME: ${{secrets.DOCKER_HUB_LOGIN}}
-  DH_TOKEN: ${{secrets.DOCKER_HUB_PWD}}
-  IMAGE_NAME: 'webrtc-server'     
-  IMAGE_TAG: ${{ github.ref == 'refs/heads/main' && 'dev' || github.ref }}
+  DH_USERNAME: ${{ secrets.DOCKER_HUB_LOGIN }}
+  DH_TOKEN: ${{ secrets.DOCKER_HUB_PWD }}
 
 jobs:
   build-and-push:
-    name: Build and push docker images
+    name: Build and push Docker images
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout webrtc-server
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup node v20
+      - name: Setup Node.js v20
         uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -30,7 +27,8 @@ jobs:
         run: |
           npm install
 
-      - uses: codfish/semantic-release-action@v3
+      - name: Run semantic release
+        uses: codfish/semantic-release-action@v3
         id: semantic
         with:
           branches: |
@@ -61,7 +59,7 @@ jobs:
                   "npmPublish": false
                 }
               ],
-              "@semantic-release/release-notes-generator",
+              "@semantic-release/release-notes-generator"
             ]
 
       - name: Log in to Docker Hub
@@ -69,20 +67,25 @@ jobs:
         run: |
           echo "$DH_TOKEN" | docker login -u "$DH_USERNAME" --password-stdin
 
-      - name: Build Docker image
-        if: steps.semantic.outputs.new-release-published == 'true'            
+      - name: Build Docker images
+        if: steps.semantic.outputs.new-release-published == 'true'
         run: |
-          docker build -f Dockerfile -t $DH_USERNAME/$IMAGE_NAME:$IMAGE_TAG .
- 
-      - name: Add tags to Docker image and push to Docker Hub
-        if: steps.semantic.outputs.new-release-published == 'true'      
+          for APP in webrtc-server loadbalancer; do
+            docker build -f apps/$APP/Dockerfile -t $DH_USERNAME/$APP:$IMAGE_TAG .
+          done
+
+      - name: Add tags to Docker images and push to Docker Hub
+        if: steps.semantic.outputs.new-release-published == 'true'
         run: |
-            docker tag $DH_USERNAME/$IMAGE_NAME:$IMAGE_TAG $DH_USERNAME/$IMAGE_NAME:v${RELEASE_MAJOR}-$IMAGE_TAG
-            docker tag $DH_USERNAME/$IMAGE_NAME:$IMAGE_TAG $DH_USERNAME/$IMAGE_NAME:v${RELEASE_MAJOR}.${RELEASE_MINOR}-$IMAGE_TAG
-            docker tag $DH_USERNAME/$IMAGE_NAME:$IMAGE_TAG $DH_USERNAME/$IMAGE_NAME:v${RELEASE_MAJOR}.${RELEASE_MINOR}.${RELEASE_PATCH:0:1}-$IMAGE_TAG
-            docker tag $DH_USERNAME/$IMAGE_NAME:$IMAGE_TAG $DH_USERNAME/$IMAGE_NAME:v$RELEASE_VERSION
-            docker push $DH_USERNAME/$IMAGE_NAME:$IMAGE_TAG
-            docker push $DH_USERNAME/$IMAGE_NAME:v$RELEASE_MAJOR-$IMAGE_TAG
-            docker push $DH_USERNAME/$IMAGE_NAME:v$RELEASE_MAJOR.$RELEASE_MINOR-$IMAGE_TAG
-            docker push $DH_USERNAME/$IMAGE_NAME:v$RELEASE_MAJOR.$RELEASE_MINOR.${RELEASE_PATCH:0:1}-$IMAGE_TAG
-            docker push $DH_USERNAME/$IMAGE_NAME:v$RELEASE_VERSION
+          for APP in webrtc-server loadbalancer; do
+            docker tag $DH_USERNAME/$APP:$IMAGE_TAG $DH_USERNAME/$APP:v${RELEASE_MAJOR}-$IMAGE_TAG
+            docker tag $DH_USERNAME/$APP:$IMAGE_TAG $DH_USERNAME/$APP:v${RELEASE_MAJOR}.${RELEASE_MINOR}-$IMAGE_TAG
+            docker tag $DH_USERNAME/$APP:$IMAGE_TAG $DH_USERNAME/$APP:v${RELEASE_MAJOR}.${RELEASE_MINOR}.${RELEASE_PATCH:0:1}-$IMAGE_TAG
+            docker tag $DH_USERNAME/$APP:$IMAGE_TAG $DH_USERNAME/$APP:v$RELEASE_VERSION
+
+            docker push $DH_USERNAME/$APP:$IMAGE_TAG
+            docker push $DH_USERNAME/$APP:v$RELEASE_MAJOR-$IMAGE_TAG
+            docker push $DH_USERNAME/$APP:v$RELEASE_MAJOR.$RELEASE_MINOR-$IMAGE_TAG
+            docker push $DH_USERNAME/$APP:v$RELEASE_MAJOR.$RELEASE_MINOR.${RELEASE_PATCH:0:1}-$IMAGE_TAG
+            docker push $DH_USERNAME/$APP:v$RELEASE_VERSION
+          done

@@ -1,8 +1,32 @@
 {
   "$schema": "https://json.schemastore.org/nest-cli",
   "collection": "@nestjs/schematics",
-  "sourceRoot": "src",
+  "sourceRoot": "apps/webrtc-server/src",
   "compilerOptions": {
-    "deleteOutDir": true
+    "deleteOutDir": true,
+    "webpack": true,
+    "tsConfigPath": "apps/webrtc-server/tsconfig.app.json"
+  },
+  "monorepo": true,
+  "root": "apps/webrtc-server",
+  "projects": {
+    "webrtc-server": {
+      "type": "application",
+      "root": "apps/webrtc-server",
+      "entryFile": "main",
+      "sourceRoot": "apps/webrtc-server/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/webrtc-server/tsconfig.app.json"
+      }
+    },
+    "loadbalancer": {
+      "type": "application",
+      "root": "apps/loadbalancer",
+      "entryFile": "main",
+      "sourceRoot": "apps/loadbalancer/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/loadbalancer/tsconfig.app.json"
+      }
+    }
   }
 }
