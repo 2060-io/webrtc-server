@@ -72,7 +72,7 @@ jobs:
         if: steps.semantic.outputs.new-release-published == 'true'
         run: |
           for APP in webrtc-server loadbalancer; do
-            docker build -f apps/$APP/Dockerfile -t $DH_USERNAME/$APP:$IMAGE_TAG .
+            docker build -f apps/$APP/Dockerfile -t $DH_USERNAME/$APP:$IMAGE_TAG apps/$APP/
           done
 
       - name: Add tags to Docker images and push to Docker Hub
