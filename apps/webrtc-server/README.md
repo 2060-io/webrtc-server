@@ -132,9 +132,10 @@ ICE Server settings for WebRTC transport creation:
 {
   "iceServers": [
     {
-      "urls": "turn:localhost:3478?transport=udp",
+      "urls": "turn:localhost:3478",
       "username": "test",
-      "credential": "test123"
+      "credential": "test123",
+      "credentialType": "password"
     }
   ]
 }
