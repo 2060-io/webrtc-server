@@ -71,22 +71,30 @@ jobs:
       - name: Build Docker images
         if: steps.semantic.outputs.new-release-published == 'true'
         run: |
-          for APP in webrtc-server loadbalancer; do
-            docker build -f apps/$APP/Dockerfile -t $DH_USERNAME/$APP:$IMAGE_TAG apps/$APP/
+          for APP in $CHANGED_APPS; do
+            IMAGE_NAME=$APP
+            if [ "$APP" == "loadbalancer" ]; then
+              IMAGE_NAME="webrtc-loadbalancer"
+            fi
+            docker build -f apps/$APP/Dockerfile -t $DH_USERNAME/$IMAGE_NAME:$IMAGE_TAG apps/$APP/
           done
 
       - name: Add tags to Docker images and push to Docker Hub
         if: steps.semantic.outputs.new-release-published == 'true'
         run: |
-          for APP in webrtc-server loadbalancer; do
-            docker tag $DH_USERNAME/$APP:$IMAGE_TAG $DH_USERNAME/$APP:v${RELEASE_MAJOR}-$IMAGE_TAG
-            docker tag $DH_USERNAME/$APP:$IMAGE_TAG $DH_USERNAME/$APP:v${RELEASE_MAJOR}.${RELEASE_MINOR}-$IMAGE_TAG
-            docker tag $DH_USERNAME/$APP:$IMAGE_TAG $DH_USERNAME/$APP:v${RELEASE_MAJOR}.${RELEASE_MINOR}.${RELEASE_PATCH:0:1}-$IMAGE_TAG
-            docker tag $DH_USERNAME/$APP:$IMAGE_TAG $DH_USERNAME/$APP:v$RELEASE_VERSION
+          for APP in $CHANGED_APPS; do
+            IMAGE_NAME=$APP
+            if [ "$APP" == "loadbalancer" ]; then
+              IMAGE_NAME="webrtc-loadbalancer"
+            fi
+            docker tag $DH_USERNAME/$IMAGE_NAME:$IMAGE_TAG $DH_USERNAME/$IMAGE_NAME:v${RELEASE_MAJOR}-$IMAGE_TAG
+            docker tag $DH_USERNAME/$IMAGE_NAME:$IMAGE_TAG $DH_USERNAME/$IMAGE_NAME:v${RELEASE_MAJOR}.${RELEASE_MINOR}-$IMAGE_TAG
+            docker tag $DH_USERNAME/$IMAGE_NAME:$IMAGE_TAG $DH_USERNAME/$IMAGE_NAME:v${RELEASE_MAJOR}.${RELEASE_MINOR}.${RELEASE_PATCH:0:1}-$IMAGE_TAG
+            docker tag $DH_USERNAME/$IMAGE_NAME:$IMAGE_TAG $DH_USERNAME/$IMAGE_NAME:v$RELEASE_VERSION
 
-            docker push $DH_USERNAME/$APP:$IMAGE_TAG
-            docker push $DH_USERNAME/$APP:v$RELEASE_MAJOR-$IMAGE_TAG
-            docker push $DH_USERNAME/$APP:v$RELEASE_MAJOR.$RELEASE_MINOR-$IMAGE_TAG
-            docker push $DH_USERNAME/$APP:v$RELEASE_MAJOR.$RELEASE_MINOR.${RELEASE_PATCH:0:1}-$IMAGE_TAG
-            docker push $DH_USERNAME/$APP:v$RELEASE_VERSION
+            docker push $DH_USERNAME/$IMAGE_NAME:$IMAGE_TAG
+            docker push $DH_USERNAME/$IMAGE_NAME:v$RELEASE_MAJOR-$IMAGE_TAG
+            docker push $DH_USERNAME/$IMAGE_NAME:v$RELEASE_MAJOR.$RELEASE_MINOR-$IMAGE_TAG
+            docker push $DH_USERNAME/$IMAGE_NAME:v$RELEASE_MAJOR.$RELEASE_MINOR.${RELEASE_PATCH:0:1}-$IMAGE_TAG
+            docker push $DH_USERNAME/$IMAGE_NAME:v$RELEASE_VERSION
           done

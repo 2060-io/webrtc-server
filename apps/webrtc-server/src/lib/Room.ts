@@ -195,15 +195,6 @@ export class Room extends EventEmitter {
         }
 
         await this.notificationService.sendNotification(eventNotificationUri, joinNotificationData)
-
-        if (process.env.LOADBALANCER_URL) {
-          this.logger.debug(`**Send notification loadBalancer***`)
-          const loadbalancerUrl = `${process.env.LOADBALANCER_URL}/room-closed`
-          await this.notificationService.post(loadbalancerUrl, {
-            serverId: config.https.ingressHost,
-            roomId: this.roomId,
-          })
-        }
       }
 
       // If the Peer was joined, notify all Peers.
@@ -222,6 +213,15 @@ export class Room extends EventEmitter {
       // If this is the latest Peer in the room, close the room.
       if (this.protooRoom.peers.length === 0) {
         this.logger.log(`last Peer in the room left, closing the room [roomId:${this.roomId}]`)
+
+        if (process.env.LOADBALANCER_URL) {
+          this.logger.debug(`**Send notification room-closed loadBalancer***`)
+          const loadbalancerUrl = `${process.env.LOADBALANCER_URL}/room-closed`
+          await this.notificationService.post(loadbalancerUrl, {
+            serverId: config.https.ingressHost,
+            roomId: this.roomId,
+          })
+        }
 
         this.close()
       }
