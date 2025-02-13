@@ -72,6 +72,10 @@ jobs:
         if: steps.semantic.outputs.new-release-published == 'true'
         run: |
           for APP in webrtc-server loadbalancer; do
+            IMAGE_NAME=$APP
+            if [ "$APP" == "loadbalancer" ]; then
+              IMAGE_NAME="webrtc-loadbalancer"
+            fi
             docker build -f apps/$APP/Dockerfile -t $DH_USERNAME/$APP:$IMAGE_TAG apps/$APP/
           done
 
