@@ -214,6 +214,7 @@ export class Room extends EventEmitter {
       if (this.protooRoom.peers.length === 0) {
         this.logger.log(`last Peer in the room left, closing the room [roomId:${this.roomId}]`)
 
+        // if LOADBALANCER_URL when the latest Peer leave room send notification POST room-closed
         if (process.env.LOADBALANCER_URL) {
           this.logger.debug(`**Send notification room-closed loadBalancer***`)
           const loadbalancerUrl = `${process.env.LOADBALANCER_URL}/room-closed`
