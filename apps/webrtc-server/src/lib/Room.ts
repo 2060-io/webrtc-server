@@ -222,6 +222,7 @@ export class Room extends EventEmitter {
             serverId: config.https.ingressHost,
             roomId: this.roomId,
           })
+          this.logger.debug(`**Send notification room-closed has been succesful***`)
         }
 
         this.close()
