@@ -38,6 +38,10 @@ This project implements a **load balancer** for WebRTC **Mediasoup** servers. It
 
 ## **Architecture & Implementation**
 
+### Architecture Diagram
+
+![Solution Architecture](docs/image.png)
+
 ### **1. Server Registration Flow**
 
 1. A Mediasoup server sends a `POST /register` request.
