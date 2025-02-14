@@ -99,7 +99,7 @@ describe('RoomsService', () => {
       })
 
       expect(loggerErrorSpy).toHaveBeenCalledWith(
-        `Error creating or retrieving room: Room with roomId ${mockRoomId} already exists.`,
+        `[createRoom] Error creating or retrieving room: Room with roomId ${mockRoomId} already exists.`,
       )
     })
   })
