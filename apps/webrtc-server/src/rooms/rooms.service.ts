@@ -281,7 +281,7 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
     maxPeerCount?: number
   }): Promise<Room> {
     const { roomId, eventNotificationUri, maxPeerCount } = options
-
+    this.logger.debug(`[getOrCreateRoom] Start - roomId: ${roomId}, maxPeerCount: ${maxPeerCount ?? 'default'}`)
     try {
       // find roomId exist
       const room = this.rooms.get(roomId)
@@ -289,7 +289,10 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
       // Check if the room already exists
       if (!room) {
         this.logger.log(`[getOrCreateRoom] creating room [roomId:${roomId}]`)
+
         const mediasoupWorker = this.getNextMediasoupWorker()
+        this.logger.debug(`[getOrCreateRoom] Selected Mediasoup Worker for roomId: ${roomId}`)
+
         // Create the new room instance
 
         const room = await Room.create({
@@ -299,6 +302,8 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
           maxPeerCount,
           mediaCodecs: config.mediasoup.routerOptions.mediaCodecs as mediasoup.types.RtpCodecCapability[],
         })
+
+        this.logger.log(`[getOrCreateRoom] Room successfully created - roomId: ${roomId}`)
 
         this.logger.debug(`*** room has been created ***`)
         // Store the room in the rooms map
@@ -353,36 +358,46 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
     eventNotificationUri?: string,
     maxPeerCount?: number,
   ): Promise<{ protocol: string; wsUrl: string; roomId: string }> {
+    this.logger.log(
+      `[createRoom] Start - roomId: ${roomId ?? 'not provided'}, maxPeerCount: ${maxPeerCount ?? 'default'}`,
+    )
     try {
       // Generate a random roomId if not provided
       const roomIdToUse = roomId ?? this.generateRandomRoomId()
+      this.logger.debug(`[createRoom] Using roomId: ${roomIdToUse}`)
 
       // Get WebSocket connection parameters
       const port = config.https.protooPort
       const announcedIp = config.https.ingressHost
       const wsUrl = `wss://${announcedIp}:${port}`
+      this.logger.debug(`[createRoom] WebSocket URL: ${wsUrl}`)
 
       // Check if the room already exists in notificationUris
       if (this.notificationUris.has(roomIdToUse)) {
+        this.logger.warn(`[createRoom] Room already exists: ${roomIdToUse}`)
         throw new Error(`Room with roomId ${roomIdToUse} already exists.`)
       }
 
       // Create or retrieve the room
+      this.logger.log(`[createRoom] Calling getOrCreateRoom for roomId: ${roomIdToUse}`)
       await this.getOrCreateRoom({ roomId: roomIdToUse, eventNotificationUri, maxPeerCount })
+      this.logger.debug(`[createRoom] Room successfully created or retrieved: ${roomIdToUse}`)
 
       // Store the eventNotificationUri associated with the roomId
       if (eventNotificationUri) {
         this.notificationUris.set(roomIdToUse, eventNotificationUri)
+        this.logger.debug(`[createRoom] Stored eventNotificationUri for roomId: ${roomIdToUse}`)
       }
 
       // Build and return the response data
+      this.logger.debug(`[createRoom] Success - Returning room details for roomId: ${roomIdToUse}`)
       return {
         protocol: '2060-mediasoup-v1',
         wsUrl,
         roomId: roomIdToUse,
       }
     } catch (error) {
-      this.logger.error(`Error creating or retrieving room: ${error.message}`)
+      this.logger.error(`[createRoom] Error creating or retrieving room: ${error.message}`)
       throw new HttpException({ error: error.message }, HttpStatus.INTERNAL_SERVER_ERROR)
     }
   }
