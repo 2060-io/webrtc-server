@@ -85,7 +85,7 @@ jobs:
           for APP in webrtc-server loadbalancer; do
             IMAGE_NAME=$APP
             if [ "$APP" == "loadbalancer" ]; then
-              IMAGE_NAME="webrtc-loadbalancer"
+              IMAGE_NAME="webrtc-load-balancer"
             fi
             docker tag $DH_USERNAME/$IMAGE_NAME:$IMAGE_TAG $DH_USERNAME/$IMAGE_NAME:v${RELEASE_MAJOR}-$IMAGE_TAG
             docker tag $DH_USERNAME/$IMAGE_NAME:$IMAGE_TAG $DH_USERNAME/$IMAGE_NAME:v${RELEASE_MAJOR}.${RELEASE_MINOR}-$IMAGE_TAG
