@@ -1,22 +1,26 @@
-
 # WebRTC Client Setup with Mediasoup
 
-This guide will walk you through setting up a WebRTC client for emitting and receiving video using Mediasoup, 
+This guide will walk you through setting up a WebRTC client for emitting and receiving video using Mediasoup,
 based on implementations in both JavaScript (using mediasoup-client) and Python (using aiortc).
+
+You can **check out** the **demo** clients located in the demo folder of the repository.
 
 ## Prerequisites
 
 ### JavaScript Requirements
+
 - Node.js (v16 or later)
 - npm/yarn (for dependency management)
 - Web browser with WebRTC support (e.g., Chrome, Firefox)
 
 ### Python Requirements
+
 - Python (v3.10 or later)
 - pip for installing dependencies
 - WebSocket server for signaling
 
 ### Server Requirements
+
 - Webrtc-server V 1.0.0
 - WebSocket Server for signaling (e.g., protoo server)
 
@@ -40,10 +44,8 @@ npm install mediasoup-client protoo-client
 
 1. **Initialize WebSocket connection**:
    Use the `protoo-client` library to establish a WebSocket connection for signaling.
-   
 2. **Mediasoup device setup**:
    Create a `mediasoup-client.Device` instance that handles the connection setup and capabilities.
-   
 3. **Transport creation**:
    Set up `SendTransport` and `RecvTransport` for transmitting and receiving media streams.
 
@@ -53,54 +55,52 @@ npm install mediasoup-client protoo-client
 5. **Receive remote media**:
    Listen for the remote stream from the server and display it on the client.
 
-
 ### Example Code (JavaScript):
 
 ```javascript
-import protooClient from 'protoo-client';
-import * as mediasoupClient from 'mediasoup-client';
+import protooClient from 'protoo-client'
+import * as mediasoupClient from 'mediasoup-client'
 
-const wsUrl = 'wss://your-signaling-server-url';
-const ws = new protooClient.Peer(new protooClient.WebSocketTransport(wsUrl));
+const wsUrl = 'wss://your-signaling-server-url'
+const ws = new protooClient.Peer(new protooClient.WebSocketTransport(wsUrl))
 
 ws.on('open', async () => {
-  const device = new mediasoupClient.Device();
+  const device = new mediasoupClient.Device()
 
   // Get RTP capabilities from server
-  const routerRtpCapabilities = await ws.request('getRouterRtpCapabilities');
-  await device.load({ routerRtpCapabilities });
+  const routerRtpCapabilities = await ws.request('getRouterRtpCapabilities')
+  await device.load({ routerRtpCapabilities })
 
   // Create transports for sending and receiving media
-  const sendTransport = await createTransport(device, true);
-  const recvTransport = await createTransport(device, false);
+  const sendTransport = await createTransport(device, true)
+  const recvTransport = await createTransport(device, false)
 
   // Get user media and produce video
-  const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-  const videoTrack = stream.getVideoTracks()[0];
-  await sendTransport.produce({ track: videoTrack });
+  const stream = await navigator.mediaDevices.getUserMedia({ video: true })
+  const videoTrack = stream.getVideoTracks()[0]
+  await sendTransport.produce({ track: videoTrack })
 
   // Consume remote video from server
-  const { producerId } = await ws.request('produce', { transportId: sendTransport.id });
-  const consumer = await recvTransport.consume({ producerId, rtpCapabilities: device.rtpCapabilities });
-  
-  const remoteStream = new MediaStream();
-  remoteStream.addTrack(consumer.track);
-  document.querySelector('video#remote').srcObject = remoteStream;
-});
+  const { producerId } = await ws.request('produce', { transportId: sendTransport.id })
+  const consumer = await recvTransport.consume({ producerId, rtpCapabilities: device.rtpCapabilities })
+
+  const remoteStream = new MediaStream()
+  remoteStream.addTrack(consumer.track)
+  document.querySelector('video#remote').srcObject = remoteStream
+})
 
 async function createTransport(device, isSend) {
-  const transportInfo = await ws.request('createWebRtcTransport', { isSend });
-  const transport = device.createSendTransport(transportInfo);
+  const transportInfo = await ws.request('createWebRtcTransport', { isSend })
+  const transport = device.createSendTransport(transportInfo)
   transport.on('connect', ({ dtlsParameters }, callback, errback) => {
-    ws.request('connectWebRtcTransport', { dtlsParameters })
-      .then(callback)
-      .catch(errback);
-  });
-  return transport;
+    ws.request('connectWebRtcTransport', { dtlsParameters }).then(callback).catch(errback)
+  })
+  return transport
 }
 ```
 
 ### Explanation:
+
 - **WebSocket signaling**: Establishes the signaling connection to the server via WebSocket.
 - **Mediasoup device**: Handles WebRTC capabilities and device setup.
 - **Media transport**: Sends and receives video streams using Mediasoup transports.
@@ -123,7 +123,7 @@ pip install pymediasoup websockets
    Connect to the server using the `websockets` library to handle WebSocket communication for signaling.
 
 2. **Create WebRTC peer connection**:
-    Use pymediasoup to manage the WebRTC connection on the client.
+   Use pymediasoup to manage the WebRTC connection on the client.
 
 3. **Capture local media**:
    Capture the local video from the webcam and add it to the peer connection.
@@ -161,7 +161,7 @@ async def connect():
 
         # Create send transport
         send_transport = await create_send_transport(websocket, device)
-        
+
         # Capture local media and produce video and audio
         video_producer, audio_producer = await produce_media(send_transport)
 
@@ -175,8 +175,8 @@ async def connect():
 async def create_send_transport(websocket, device):
     reqId = generate_random_number()
     await send_request(websocket, reqId, "createWebRtcTransport", {
-        "forceTcp": False, 
-        "producing": True, 
+        "forceTcp": False,
+        "producing": True,
         "consuming": False
     })
     ans = await wait_for_response(websocket, reqId)
@@ -192,7 +192,7 @@ async def create_send_transport(websocket, device):
     async def on_connect(dtlsParameters):
         reqId = generate_random_number()
         await send_request(websocket, reqId, "connectWebRtcTransport", {
-            "transportId": send_transport.id, 
+            "transportId": send_transport.id,
             "dtlsParameters": dtlsParameters.dict(exclude_none=True)
         })
         await wait_for_response(websocket, reqId)
@@ -229,7 +229,7 @@ async def create_recv_transport(websocket, device):
     async def on_connect(dtlsParameters):
         reqId = generate_random_number()
         await send_request(websocket, reqId, "connectWebRtcTransport", {
-            "transportId": recv_transport.id, 
+            "transportId": recv_transport.id,
             "dtlsParameters": dtlsParameters.dict(exclude_none=True)
         })
         await wait_for_response(websocket, reqId)
@@ -245,9 +245,9 @@ async def consume_media(transport, websocket):
     ans = await wait_for_response(websocket, reqId)
 
     consumer = await transport.consume(
-        id=ans["data"]["id"], 
-        producerId=ans["data"]["producerId"], 
-        kind=ans["data"]["kind"], 
+        id=ans["data"]["id"],
+        producerId=ans["data"]["producerId"],
+        kind=ans["data"]["kind"],
         rtpParameters=ans["data"]["rtpParameters"]
     )
 
@@ -325,20 +325,19 @@ Make sure to replace `your-signaling-server-url` with your actual WebSocket sign
 
 ## Client Websocket Request Added
 
-
 #### **Sending the `leaveRoom` Request**
 
 ```javascript
-await ws.request('leaveRoom');
+await ws.request('leaveRoom')
 ```
 
 #### **Listening for the `peerLeft` Notification**
 
 ```javascript
 socket.on('peerLeft', ({ peerId }) => {
-  console.log(`Peer ${peerId} has left the room`);
+  console.log(`Peer ${peerId} has left the room`)
   // Update the UI to reflect the departure
-});
+})
 ```
 
 This ensures that all participants are informed when a peer leaves, and the UI can be updated accordingly.
@@ -349,7 +348,5 @@ With this method, the Mediasoup server ensures efficient handling of call termin
 
 ## Conclusion
 
-By following this guide, you will have a fully functional WebRTC client implemented in both JavaScript and Python, 
+By following this guide, you will have a fully functional WebRTC client implemented in both JavaScript and Python,
 using Mediasoup for media transport and WebSocket signaling.
-
-

@@ -20,9 +20,8 @@ services:
       - MEDIASOUP_CLIENT_ICESERVER_PASS=test123
       - MEDIASOUP_CLIENT_PROTOOPORT=443
       - MEDIASOUP_INGRESS_HOST=webrtc.prueba.2060.io
-      - REDIS_URL=redis://redis:6379
-      - LOADBALANCER_URL=http://192.168.10.18:3000
-      - SERVICE_URL=https://192.168.10.18
+      - LOADBALANCER_URL=http://192.168.10.18:3000 #define if you need load balancer app
+      - SERVICE_URL=https://192.168.10.18 #define if you need load balancer app
     ports:
       - '443:4443'
     networks:
