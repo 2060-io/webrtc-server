@@ -91,7 +91,7 @@ docker build . -t 2060-webrtc-server:test
 docker-compose up -d
 ```
 
-### Kubernetes Deployment tips
+### Kubernetes Deployment
 
 Ensure that the Kubernetes load balancer allows UDP traffic to Coturn service nodes. Set the public IP in the `.env` file:
 

@@ -17,7 +17,7 @@ A highly customized WebRTC server based on **Mediasoup-demo v3**, tailored to su
 
 ---
 
-### ** Load Balancer for WebRTC Services**
+### **Load Balancer for WebRTC Services**
 
 A specialized load balancer designed to **distribute WebRTC sessions** across multiple Mediasoup-based servers, enhancing scalability and fault tolerance.
 
