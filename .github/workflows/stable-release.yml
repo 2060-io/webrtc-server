@@ -16,17 +16,20 @@ jobs:
       - name: Checkout webrtc-server
         uses: actions/checkout@v4
 
-      - name: Setup node v20
+      - name: Setup node v22
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
+
+      - name: Enable corepack
+        run: corepack enable
 
       - id: get_version
         uses: battila7/get-version-action@v2
 
       - name: Install dependencies
-        run: |
-          npm install
+        run: pnpm install
+
       - name: Log in to Docker Hub
         if: steps.get_version.outputs.is-semver == 'true'
         run: |
