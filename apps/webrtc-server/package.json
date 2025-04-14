@@ -5,6 +5,7 @@
   "author": "",
   "private": true,
   "license": "Apache-2.0",
+  "packageManager": "pnpm@9.15.3",
   "scripts": {
     "build": "nest build",
     "check-types": "eslint \"{src,apps,libs,test}/**/*.ts\" --ignore-pattern demo/",
@@ -67,6 +68,6 @@
     "ts-loader": "^9.4.3",
     "ts-node": "^10.9.1",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.1.3"
+    "typescript": "5.1.3"
   }
 }
