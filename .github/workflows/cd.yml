@@ -78,6 +78,7 @@ jobs:
             if [ "$APP" == "loadbalancer" ]; then
               IMAGE_NAME="webrtc-loadbalancer"
             fi
+            cp pnpm-lock.yaml apps/$APP/
             docker build -f apps/$APP/Dockerfile -t $DH_USERNAME/$IMAGE_NAME:$IMAGE_TAG apps/$APP/
           done
 
