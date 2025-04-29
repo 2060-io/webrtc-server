@@ -10,7 +10,7 @@ You can **check out** the **demo** clients located in the demo folder of the rep
 ### JavaScript Requirements
 
 - Node.js (v16 or later)
-- npm/yarn (for dependency management)
+- pnpm (for dependency management)
 - Web browser with WebRTC support (e.g., Chrome, Firefox)
 
 ### Python Requirements

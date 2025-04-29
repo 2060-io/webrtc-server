@@ -13,30 +13,28 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout webrtc-server
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup node v22
+      - name: Setup Node.js v22
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
+      - name: Enable corepack
+        run: corepack enable
+
       - name: Install dependencies
-        run: |
-          yarn install
+        run: pnpm install
 
       - name: Check Format
-        run: |
-          yarn format
+        run: pnpm format
 
       - name: Check Types
-        run: |
-          yarn check-types
+        run: pnpm check-types
 
       - name: Unit tests
-        run: |
-          yarn test
+        run: pnpm test
 
       - name: E2E tests
-        run: |
-          yarn test:e2e
+        run: pnpm test:e2e

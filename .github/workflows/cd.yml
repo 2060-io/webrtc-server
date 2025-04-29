@@ -19,14 +19,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js v20
+      - name: Setup Node.js v22
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
+
+      - name: Enable corepack
+        run: corepack enable
 
       - name: Install dependencies
-        run: |
-          npm install
+        run: pnpm install
 
       - name: Run semantic release
         uses: codfish/semantic-release-action@v3
