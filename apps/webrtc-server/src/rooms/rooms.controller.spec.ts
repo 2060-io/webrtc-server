@@ -3,6 +3,7 @@ import { RoomsController } from './rooms.controller'
 import { RoomsService } from './rooms.service'
 import { HttpException, HttpStatus } from '@nestjs/common'
 import { CreateBroadcasterDto, CreateRoomDto } from 'src/rooms/dto/rooms.dto'
+import { getErrorMessage } from '../utils/error-utils'
 
 describe('RoomsController', () => {
   let controller: RoomsController
@@ -77,8 +78,10 @@ describe('RoomsController', () => {
         await controller.createRoom(roomId, createRoomDto)
       } catch (error) {
         expect(error).toBeInstanceOf(HttpException)
-        expect(error.message).toBe('Failed to create room: Test Error')
-        expect(error.getStatus()).toBe(HttpStatus.INTERNAL_SERVER_ERROR)
+        expect(getErrorMessage(error)).toBe('Failed to create room: Test Error')
+        if (error instanceof HttpException) {
+          expect(error.getStatus()).toBe(HttpStatus.INTERNAL_SERVER_ERROR)
+        }
       }
     })
   })

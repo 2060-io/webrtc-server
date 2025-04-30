@@ -12,6 +12,7 @@ import {
   DeleteBroadcasterDto,
 } from './dto/rooms.dto'
 import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger'
+import { getErrorMessage } from '../utils/error-utils'
 
 @ApiTags('rooms')
 @Controller('rooms')
@@ -96,8 +97,8 @@ export class RoomsController {
     try {
       return await this.roomsService.createRoom(roomId, eventNotificationUri, maxPeerCount)
     } catch (error) {
-      this.logger.error(`${error.message}`)
-      throw new HttpException(`${error.message}`, HttpStatus.INTERNAL_SERVER_ERROR)
+      this.logger.error(`${getErrorMessage(error)}`)
+      throw new HttpException(`${getErrorMessage(error)}`, HttpStatus.INTERNAL_SERVER_ERROR)
     }
   }
 
@@ -143,7 +144,7 @@ export class RoomsController {
       const room = await this.roomsService.getOrCreateRoom({ roomId })
       return room.getRouterRtpCapabilities()
     } catch (error) {
-      throw new HttpException(`Failed to get room information: ${error.message}`, HttpStatus.NOT_FOUND)
+      throw new HttpException(`Failed to get room information: ${getErrorMessage(error)}`, HttpStatus.NOT_FOUND)
     }
   }
 
@@ -229,7 +230,10 @@ export class RoomsController {
     try {
       return await this.roomsService.createBroadcaster(roomId, createBroadcasterDto)
     } catch (error) {
-      throw new HttpException(`Failed to create broadcaster: ${error.message}`, HttpStatus.INTERNAL_SERVER_ERROR)
+      throw new HttpException(
+        `Failed to create broadcaster: ${getErrorMessage(error)}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      )
     }
   }
 
@@ -270,7 +274,10 @@ export class RoomsController {
       await this.roomsService.deleteBroadcaster(roomId, broadcasterId)
       return { message: 'Broadcaster deleted successfully' }
     } catch (error) {
-      throw new HttpException(`Failed to delete broadcaster: ${error.message}`, HttpStatus.INTERNAL_SERVER_ERROR)
+      throw new HttpException(
+        `Failed to delete broadcaster: ${getErrorMessage(error)}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      )
     }
   }
 
@@ -352,7 +359,7 @@ export class RoomsController {
       return await this.roomsService.createBroadcasterTransport(roomId, broadcasterId, createBroadcasterTransportDto)
     } catch (error) {
       throw new HttpException(
-        `Failed to create broadcaster transport: ${error.message}`,
+        `Failed to create broadcaster transport: ${getErrorMessage(error)}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       )
     }
@@ -414,7 +421,7 @@ export class RoomsController {
       return { message: 'Broadcaster transport connected successfully' }
     } catch (error) {
       throw new HttpException(
-        `Failed to connect broadcaster transport: ${error.message}`,
+        `Failed to connect broadcaster transport: ${getErrorMessage(error)}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       )
     }
@@ -496,7 +503,7 @@ export class RoomsController {
       return producerData
     } catch (error) {
       throw new HttpException(
-        `Failed to create broadcaster produces transport: ${error.message}`,
+        `Failed to create broadcaster produces transport: ${getErrorMessage(error)}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       )
     }
@@ -577,7 +584,7 @@ export class RoomsController {
       return { data }
     } catch (error) {
       throw new HttpException(
-        `Failed to create broadcaster consumer transport: ${error.message}`,
+        `Failed to create broadcaster consumer transport: ${getErrorMessage(error)}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       )
     }
@@ -651,8 +658,11 @@ export class RoomsController {
       )
       return data
     } catch (error) {
-      this.logger.error(`Failed to create DataConsumer: ${error.message}`)
-      throw new HttpException(`Failed to create DataConsumer: ${error.message}`, HttpStatus.INTERNAL_SERVER_ERROR)
+      this.logger.error(`Failed to create DataConsumer: ${getErrorMessage(error)}`)
+      throw new HttpException(
+        `Failed to create DataConsumer: ${getErrorMessage(error)}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      )
     }
   }
 
@@ -727,7 +737,10 @@ export class RoomsController {
       const data = await this.roomsService.createBroadcasterDataProducer(roomId, broadcasterId, transportId, dto)
       return { status: 200, data }
     } catch (error) {
-      throw new HttpException(`Failed to create DataProducer: ${error.message}`, HttpStatus.INTERNAL_SERVER_ERROR)
+      throw new HttpException(
+        `Failed to create DataProducer: ${getErrorMessage(error)}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      )
     }
   }
 }
