@@ -1,0 +1,6 @@
+apiVersion: v2
+name: webrtc-loadbalancer
+version: 0.0.1
+description: Helm chart for deploying WebRTC Load Balancer
+type: application
+appVersion: dev
