@@ -21,7 +21,7 @@ This Helm chart deploys the WebRTC server application along with the necessary K
 Ensure the chart is correctly formatted:
 
 ```bash
-helm lint ./deployments/webrtc-server
+helm lint ./charts/webrtc-server
 ```
 
 ### 2. Render Templates
@@ -29,7 +29,7 @@ helm lint ./deployments/webrtc-server
 Preview the generated Kubernetes manifests:
 
 ```bash
-helm template 2060-webrtc-demos-blue ./deployments/webrtc-server --namespace demos
+helm template 2060-webrtc-demos-blue ./charts/webrtc-server --namespace demos
 ```
 
 ### 3. Dry-Run Installation
@@ -37,7 +37,7 @@ helm template 2060-webrtc-demos-blue ./deployments/webrtc-server --namespace dem
 Simulate the installation without making changes to your cluster:
 
 ```bash
-helm install --dry-run --debug 2060-webrtc-demos-blue ./deployments/webrtc-server --namespace demos
+helm install --dry-run --debug 2060-webrtc-demos-blue ./charts/webrtc-server --namespace demos
 ```
 
 ### 4. Install the Chart
@@ -45,7 +45,7 @@ helm install --dry-run --debug 2060-webrtc-demos-blue ./deployments/webrtc-serve
 Ensure the target namespace already exists.
 
 ```bash
-helm upgrade --install 2060-webrtc-demos-blue ./deployments/webrtc-server --namespace demos --wait 
+helm upgrade --install 2060-webrtc-demos-blue ./charts/webrtc-server --namespace demos --wait 
 ```
 
 ---
@@ -55,7 +55,7 @@ helm upgrade --install 2060-webrtc-demos-blue ./deployments/webrtc-server --name
 All configurable parameters are located in the `values.yaml` file. You can adjust:
 
 - **Namespace**: The target namespace and whether it should be created.
-- **Instance ID**: Use `instanceId` to differentiate multiple deployments.
+- **Instance ID**: Use `instanceId` to differentiate multiple charts.
 - **Service**: The name and configuration of the Service.
 - **Ingress**: Hostname and TLS settings.
 - **StatefulSet**: Application settings such as replicas, container image, and storage.

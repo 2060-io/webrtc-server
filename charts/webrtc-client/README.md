@@ -23,7 +23,7 @@ This Helm chart deploys the webrtc-client application along with the necessary K
 Ensure the chart is correctly formatted:
 
 ```bash
-helm lint ./deployments/webrtc-client
+helm lint ./charts/webrtc-client
 ```
 
 ### 2. Render Templates
@@ -31,7 +31,7 @@ helm lint ./deployments/webrtc-client
 Preview the generated Kubernetes manifests:
 
 ```bash
-helm template 2060-webrtc-client-demos-blue ./deployments/webrtc-client --namespace demos
+helm template 2060-webrtc-client-demos-blue ./charts/webrtc-client --namespace demos
 ```
 
 ### 3. Dry-Run Installation
@@ -39,7 +39,7 @@ helm template 2060-webrtc-client-demos-blue ./deployments/webrtc-client --namesp
 Simulate the installation without making changes to your cluster:
 
 ```bash
-helm install --dry-run --debug 2060-webrtc-client-demo-blue ./deployments/webrtc-client --namespace demos
+helm install --dry-run --debug 2060-webrtc-client-demo-blue ./charts/webrtc-client --namespace demos
 ```
 
 ### 4. Install the Chart
@@ -47,7 +47,7 @@ helm install --dry-run --debug 2060-webrtc-client-demo-blue ./deployments/webrtc
 If the target namespace already exists, ensure `createNamespace` is set to `false` in `values.yaml`. Otherwise, set it to `true` to have Helm create the namespace automatically.
 
 ```bash
-helm install 2060-webrtc-client-demo-blue ./deployments/webrtc-client --namespace demos
+helm install 2060-webrtc-client-demo-blue ./charts/webrtc-client --namespace demos
 ```
 
 ## Configuration
@@ -77,7 +77,7 @@ ingress:
 ## Installation example with serverName
 
 ```bash
-helm install 2060-webrtc-client-demos-blue ./deployments/webrtc-client \
+helm install 2060-webrtc-client-demos-blue ./charts/webrtc-client \
   --namespace demos \
   --set configMap.serverName=webrtc.demos.dev.2060.io \
   --set configMap.protooPort=443 --wait

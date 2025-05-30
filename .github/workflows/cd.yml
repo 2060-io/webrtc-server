@@ -121,5 +121,5 @@ jobs:
               helm package "$chart" -d ./charts
               helm push ./charts/"$chart_name"-$IMAGE_TAG.tgz oci://docker.io/$DH_USERNAME
             fi
-          done        
+          done
         

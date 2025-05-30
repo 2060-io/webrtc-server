@@ -1,0 +1,143 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name:  {{ .Values.service.name }}
+  namespace: {{ .Values.namespace.name }}
+spec:
+  selector:
+    app: {{ .Values.app.name }}
+  ports:
+    - name: http
+      port: {{ .Values.service.ports.http }}
+      protocol: TCP
+      targetPort: 3001
+    - name: app-check
+      protocol: TCP
+      port: {{ .Values.service.ports.appCheck }}
+      targetPort: 3100
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{.Values.configMap.name}}
+  namespace: {{ .Values.namespace.name }}
+data:
+  ENDPOINT_URLS: |
+    [
+      {
+        "pattern": "/rooms.*",
+        "baseUrl": "http://webrtc-loadbalancer.{{ .Values.namespace.name }}"
+      },
+      {
+        "pattern": "/healt.*",
+        "baseUrl": "http://webrtc-loadbalancer.{{ .Values.namespace.name }}"
+      }
+    ]
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{.Values.ingress.name }}
+  namespace: {{ .Values.namespace.name }}
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - {{ .Values.ingress.host }}
+      secretName: {{ .Values.ingress.tlsSecretName }}
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.service.name }}
+                port:
+                  number: 3100
+---
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Values.statefulset.name }}
+  namespace: {{ .Values.namespace.name }}
+spec:
+  serviceName: {{ .Values.statefulset.serviceName }}
+  replicas: {{ .Values.statefulset.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.app.name }}
+  template:
+    metadata:
+      labels:
+         app: {{ .Values.app.name }}
+    spec:
+      containers:
+        - name: {{ .Values.statefulset.containerName }}
+          image: {{ .Values.statefulset.image.repository }}:{{ .Values.statefulset.image.tag }}
+          imagePullPolicy: {{ .Values.statefulset.image.pullPolicy }}
+          resources:
+            requests:
+              cpu: {{ .Values.statefulset.resources.webrtcLoadbalancer.requests.cpu | quote }}
+              memory: {{ .Values.statefulset.resources.webrtcLoadbalancer.requests.memory | quote }}
+            limits:
+              cpu: {{ .Values.statefulset.resources.webrtcLoadbalancer.limits.cpu | quote }}
+              memory: {{ .Values.statefulset.resources.webrtcLoadbalancer.limits.memory | quote }}
+          env:
+            - name: LOG_LEVEL
+              value: "{{ .Values.env.LOG_LEVEL }}"
+            - name: APP_PORT
+              value: "{{ .Values.env.APP_PORT }}"
+            - name: REDIS_URL
+              value: "{{ .Values.env.REDIS_URL }}"
+            - name: HEALTH_CHECK_INTERVAL
+              value: "{{ .Values.env.HEALTH_CHECK_INTERVAL }}"
+          ports:
+            - containerPort: 80
+              name: http
+              protocol: TCP
+            - containerPort: 3001
+              name: https
+              protocol: TCP
+        - name: {{ .Values.appCheckProxy.name }}
+          image: "{{ .Values.appCheckProxy.image.repository }}:{{ .Values.appCheckProxy.image.tag }}"
+          securityContext:
+            readOnlyRootFilesystem: false
+          imagePullPolicy: {{ .Values.appCheckProxy.image.pullPolicy }}
+          resources:
+            requests:
+              cpu: {{ .Values.statefulset.resources.appCheckProxy.requests.cpu | quote }}
+              memory: {{ .Values.statefulset.resources.appCheckProxy.requests.memory | quote }}
+            limits:
+              cpu: {{ .Values.statefulset.resources.appCheckProxy.limits.cpu | quote }}
+              memory: {{ .Values.statefulset.resources.appCheckProxy.limits.memory | quote }}
+          env:
+            - name: APP_PORT
+              value: "{{ .Values.appCheckProxy.env.APP_PORT }}"
+            - name: FIREBASE_CFG_FILE
+              value: "{{ .Values.appCheckProxy.env.FIREBASE_CFG_FILE }}"
+            - name: ENDPOINT_URLS
+              valueFrom:
+                configMapKeyRef:
+                  name: "{{ .Values.configMap.name }}"
+                  key: "{{ .Values.configMap.key }}"
+          ports:
+            - containerPort: 3100
+          volumeMounts:
+            - name: firebase-config-volume
+              mountPath: /config
+              readOnly: false
+      imagePullSecrets:
+        - name: registry-credentials
+      securityContext:
+        fsGroup: 185
+      volumes:
+        - name: firebase-config-volume
+          configMap:
+            name: firebase-config
