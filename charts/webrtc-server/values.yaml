@@ -1,23 +1,37 @@
+# Increase this value when you want install a new instance webrtc-server
+# instanceId: 1
 
 namespace:
   name: default
 
 # Service configuration
 service:
+  # Recommended for multi-instance mode: Use instanceId to differentiate service names.
+  # name: webrtc-server-{{ .Values.instanceId }}-service
   name: webrtc-demos-service
 
 # Ingress configuration
 ingress:
+  # Recommended for multi-instance mode: Use instanceId to differentiate ingress names and hosts.
+  # name: webrtc-server-{{ .Values.instanceId }}-ingress
+  # host: webrtc-server-{{ .Values.instanceId }}.example.io
+  # tlsSecret: webrtc-server-{{ .Values.instanceId }}.example.io-cert
   name: webrtc-demos-ingress
   host: webrtc.example.io
   tlsSecret: webrtc.example.io-cert
 
 # Application name used in labels
 app:
+  # Recommended for multi-instance mode: Use instanceId to differentiate application names.
+  # name: webrtc-server-{{ .Values.instanceId }}
   name: webrtc-demos
 
-# StatefulSet configuration  webrtc.example.io
+# StatefulSet configuration
 statefulset:
+  # Recommended for multi-instance mode: Use instanceId to differentiate StatefulSet names and container names.
+  # name: webrtc-server-{{ .Values.instanceId }}
+  # serviceName: "webrtc-server-{{ .Values.instanceId }}-service"
+  # containerName: webrtc-server-container-{{ .Values.instanceId }}
   name: webrtc-demos
   serviceName: "webrtc-demos-service"
   replicas: 1
@@ -40,11 +54,21 @@ env:
   MEDIASOUP_CLIENT_ICESERVER_PORT: "3478"
   MEDIASOUP_CLIENT_ICESERVER_USER: "user"
   MEDIASOUP_CLIENT_ICESERVER_PASS: "password"
+  # Recommended for multi-instance mode: Use instanceId to differentiate ingress hosts.
+  # MEDIASOUP_INGRESS_HOST: "webrtc-server-{{ .Values.instanceId }}.example.io"
   MEDIASOUP_INGRESS_HOST: "webrtc.example.io"
   HTTPS_CERT_FULLCHAIN: "/config/certificates/tls.crt"
   HTTPS_CERT_PRIVKEY: "/config/certificates/tls.key"
 
   # Secret configuration
 secret:
+  # Recommended for multi-instance mode: Use instanceId to differentiate secret names.
+  # name: webrtc-server-{{ .Values.instanceId }}.example.io-cert
   name: webrtc.example.io-cert
 
+extraEnv: []
+# extraEnv: 
+#   - name: LOADBALANCER_URL
+#     value: "http://webrtc-loadbalancer.2060-core-dev"
+#   - name: SERVICE_URL
+#     value: "https://webrtc-server-{{ .Values.instanceId }}-service.2060-core-dev"
