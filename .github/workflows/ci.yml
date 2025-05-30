@@ -38,3 +38,12 @@ jobs:
 
       - name: E2E tests
         run: pnpm test:e2e
+
+      - name: Validate all Helm charts
+        run: |
+          for chart in ./charts/*; do
+            if [ -d "$chart" ] && [ -f "$chart/Chart.yaml" ]; then
+              echo "🔍 Validating chart: $chart"
+              helm lint "$chart"
+            fi
+          done   

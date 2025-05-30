@@ -1,0 +1,81 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.name }}
+spec:
+  selector:
+    app: {{ .Values.name }}
+  ports:
+    - name: https
+      port: 443
+      protocol: TCP
+      targetPort: 5000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Values.name }}
+  namespace: {{ .Values.namespace }}
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/proxy-body-size: 15m  
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - {{ .Values.name }}.demos.dev.2060.io
+      secretName: {{ .Values.name }}.demos.dev.2060.io-cert
+  rules:
+    - host: {{ .Values.name }}.demos.dev.2060.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.name }}
+                port:
+                  number: 5000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.name }}
+  namespace: {{ .Values.namespace }}
+spec:
+  serviceName: {{ .Values.name }}
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels:
+        app: {{ .Values.name }}
+  template:
+    metadata:
+        labels:
+          app: {{ .Values.name }}
+    spec:
+      containers:
+        - name: {{ .Values.name }}
+          image: "{{ .Values.images.backend.repository }}:{{ .Values.images.backend.tag }}"
+          imagePullPolicy: Always
+          env:
+            - name: FLASK_APP
+              value: "{{ .Values.images.backend.env.flask_app }}"
+            - name: FLASK_ENV
+              value: "{{ .Values.images.backend.env.flask_env }}"
+            - name: FLASK_DEBUG
+              value: "{{ .Values.images.backend.env.debug }}"
+            - name: PYTHONUNBUFFERED
+              value: "{{ .Values.images.backend.env.pythonunbuffered }}"
+            - name: DEFAULT_VIDEO_SRC_URL
+              value: "{{ .Values.images.backend.env.video_url }}"
+          ports:
+            - containerPort: 5000              
+              protocol: TCP          
+      imagePullSecrets:
+        - name: registry-credentials
+      restartPolicy: Always     
+      
+
