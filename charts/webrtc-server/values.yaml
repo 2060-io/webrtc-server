@@ -41,6 +41,13 @@ statefulset:
     tag: dev
     pullPolicy: Always
   storage: 1Gi
+  resources:
+    requests:
+      cpu: "200m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
 
 # Environment variables
 env:
