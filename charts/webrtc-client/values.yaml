@@ -1,0 +1,42 @@
+namespace: default
+
+configMap:
+  name: webrtc-client-demos-config
+  serverName: webrtc.example.io
+  protooPort: 443
+
+secret:
+  name: webrtc-webclient.example.io-cert
+       
+deployment:
+  color: blue
+  first: true
+  name: webrtc-webclient
+  labels:
+    app: webrtc-webclient
+  image:
+    repository: io2060/webrtc-webclient
+    tag: dev
+    pullPolicy: Always
+  replicas: 1
+  resources:
+    limits:
+      memory: "512Mi"
+      cpu: "1"
+    requests:
+      memory: "256Mi"
+      cpu: "0.5"
+
+service:
+  name: webrtc-client-demos-service
+  ports:
+    https: 443
+
+ingress:
+  name: webrtc-client-demos-ingress
+  enabled: true
+  host: webrtc-webclient.example.io
+  tlsSecretName: webrtc-webclient.example.io-cert
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/backend-protocol: HTTPS  

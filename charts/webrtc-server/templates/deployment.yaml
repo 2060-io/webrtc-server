@@ -1,0 +1,116 @@
+
+
+{{/* Service */}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ tpl .Values.service.name . }}
+  namespace: {{ .Values.namespace.name }}
+spec:
+  selector:
+    app: {{ tpl .Values.app.name . }}
+  ports:
+    - name: https
+      port: 443
+      targetPort: 4443
+      protocol: TCP
+---
+{{/* Ingress */}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ tpl .Values.ingress.name . }}
+  namespace: {{ .Values.namespace.name }}
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/backend-protocol: HTTPS
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - {{ tpl .Values.ingress.host . }}
+      secretName: {{ tpl .Values.ingress.tlsSecret . }}
+  rules:
+    - host: {{ tpl .Values.ingress.host . }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ tpl .Values.service.name . }}
+                port:
+                  number: 443
+          
+---
+{{/* StatefulSet */}}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ tpl .Values.statefulset.name . }}
+  namespace: {{ .Values.namespace.name }}
+spec:
+  serviceName: {{ tpl .Values.statefulset.serviceName . }}
+  replicas: {{ .Values.statefulset.replicas }}
+  selector:
+    matchLabels:
+      app: {{ tpl .Values.app.name . }}
+  template:
+    metadata:
+      labels:
+        app: {{ tpl .Values.app.name . }}
+    spec:
+      restartPolicy: Always
+      containers:
+        - name: {{ tpl .Values.statefulset.containerName . }}
+          image: "{{ .Values.statefulset.image.repository }}:{{ .Values.statefulset.image.tag }}"
+          imagePullPolicy: {{ .Values.statefulset.image.pullPolicy }}
+          env:
+            - name: LOG_LEVEL
+              value: "{{ .Values.env.LOG_LEVEL }}"
+            - name: DEBUG
+              value: "{{ .Values.env.DEBUG }}"
+            - name: PROTOO_LISTEN_PORT
+              value: "{{ .Values.env.PROTOO_LISTEN_PORT }}"
+            - name: MEDIASOUP_ANNOUNCED_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: MEDIASOUP_LISTEN_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: MEDIASOUP_CLIENT_PROTOOPORT
+              value: "{{ .Values.env.MEDIASOUP_CLIENT_PROTOOPORT }}"
+            - name: MEDIASOUP_CLIENT_ICESERVER_HOST
+              value: "{{ .Values.env.MEDIASOUP_CLIENT_ICESERVER_HOST }}"
+            - name: MEDIASOUP_CLIENT_ICESERVER_PROTO
+              value: "{{ .Values.env.MEDIASOUP_CLIENT_ICESERVER_PROTO }}"
+            - name: MEDIASOUP_CLIENT_ICESERVER_PORT
+              value: "{{ .Values.env.MEDIASOUP_CLIENT_ICESERVER_PORT }}"
+            - name: MEDIASOUP_CLIENT_ICESERVER_USER
+              value: "{{ .Values.env.MEDIASOUP_CLIENT_ICESERVER_USER }}"
+            - name: MEDIASOUP_CLIENT_ICESERVER_PASS
+              value: "{{ .Values.env.MEDIASOUP_CLIENT_ICESERVER_PASS }}"
+            - name: MEDIASOUP_INGRESS_HOST
+              value: "{{ tpl .Values.env.MEDIASOUP_INGRESS_HOST . }}"
+            - name: HTTPS_CERT_FULLCHAIN
+              value: "{{ .Values.env.HTTPS_CERT_FULLCHAIN }}"
+            - name: HTTPS_CERT_PRIVKEY
+              value: "{{ .Values.env.HTTPS_CERT_PRIVKEY }}"
+              
+          ports:
+            - containerPort: 80
+              name: http
+              protocol: TCP
+            - containerPort: 4443
+              name: https
+              protocol: TCP
+          volumeMounts:
+           - name: tls-certificates
+             mountPath: /config/certificates
+             readOnly: true                    
+      volumes:
+        - name: tls-certificates
+          secret:
+            secretName: {{ tpl .Values.secret.name . }}

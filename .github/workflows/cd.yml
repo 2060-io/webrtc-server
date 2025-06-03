@@ -29,6 +29,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install
+      
+      - name: Setup Helm
+        uses: azure/setup-helm@v3
 
       - name: Run semantic release
         uses: codfish/semantic-release-action@v3
@@ -101,3 +104,22 @@ jobs:
             docker push $DH_USERNAME/$IMAGE_NAME:v$RELEASE_MAJOR.$RELEASE_MINOR.${RELEASE_PATCH:0:1}-$IMAGE_TAG
             docker push $DH_USERNAME/$IMAGE_NAME:v$RELEASE_VERSION
           done
+
+      - name: Log in to Docker Hub Helm Registry
+        if: steps.semantic.outputs.new-release-published == 'true'
+        run: |
+          echo "$DH_TOKEN" | helm registry login -u "$DH_USERNAME" --password-stdin docker.io
+
+      - name: Push Helm charts to Docker Hub OCI repo
+        if: steps.semantic.outputs.new-release-published == 'true'
+        run: |
+          for chart in ./charts/*; do
+            if [ -d "$chart" ]; then
+              chart_name=$(basename "$chart")
+              sed -i "s/^version:.*/version: $IMAGE_TAG/" "$chart/Chart.yaml"
+              helm dependency update "$chart"
+              helm package "$chart" -d ./charts
+              helm push ./charts/"$chart_name"-$IMAGE_TAG.tgz oci://docker.io/$DH_USERNAME
+            fi
+          done        
+        

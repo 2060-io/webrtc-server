@@ -1,0 +1,6 @@
+apiVersion: v2
+name: webrtc-server-chart
+description: Helm chart for deploying WebRTC server
+type: application
+version: 0.0.1
+appVersion: dev

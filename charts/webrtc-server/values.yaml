@@ -1,0 +1,50 @@
+
+namespace:
+  name: default
+
+# Service configuration
+service:
+  name: webrtc-demos-service
+
+# Ingress configuration
+ingress:
+  name: webrtc-demos-ingress
+  host: webrtc.example.io
+  tlsSecret: webrtc.example.io-cert
+
+# Application name used in labels
+app:
+  name: webrtc-demos
+
+# StatefulSet configuration  webrtc.example.io
+statefulset:
+  name: webrtc-demos
+  serviceName: "webrtc-demos-service"
+  replicas: 1
+  containerName: webrtc-demos-container
+  image:
+    repository: io2060/webrtc-server
+    tag: dev
+    pullPolicy: Always
+  storage: 1Gi
+
+# Environment variables
+env:
+  LOG_LEVEL: "3"
+  DEBUG: "*mediasoup* *INFO* *WARN* *ERROR*"
+  PROTOO_LISTEN_PORT: "4443"
+  MEDIASOUP_CLIENT_PROTOOPORT: "443"
+  MEDIASOUP_CLIENT_ENABLE_ICESERVER: "yes"
+  MEDIASOUP_CLIENT_ICESERVER_HOST: "xxx.xxx.xxx.xxx"
+  MEDIASOUP_CLIENT_ICESERVER_PROTO: "udp"
+  MEDIASOUP_CLIENT_ICESERVER_PORT: "3478"
+  MEDIASOUP_CLIENT_ICESERVER_USER: "user"
+  MEDIASOUP_CLIENT_ICESERVER_PASS: "password"
+  MEDIASOUP_INGRESS_HOST: "webrtc.example.io"
+  HTTPS_CERT_FULLCHAIN: "/config/certificates/tls.crt"
+  HTTPS_CERT_PRIVKEY: "/config/certificates/tls.key"
+
+  # Secret configuration
+secret:
+  name: webrtc.example.io-cert
+
