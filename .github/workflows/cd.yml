@@ -29,7 +29,7 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install
-      
+
       - name: Setup Helm
         uses: azure/setup-helm@v3
 
@@ -79,7 +79,7 @@ jobs:
           for APP in webrtc-server loadbalancer; do
             IMAGE_NAME=$APP
             if [ "$APP" == "loadbalancer" ]; then
-              IMAGE_NAME="webrtc-loadbalancer"
+              IMAGE_NAME="webrtc-load-balancer"
             fi
             cp pnpm-lock.yaml apps/$APP/
             docker build -f apps/$APP/Dockerfile -t $DH_USERNAME/$IMAGE_NAME:$IMAGE_TAG apps/$APP/
@@ -122,4 +122,3 @@ jobs:
               helm push ./charts/"$chart_name"-$IMAGE_TAG.tgz oci://docker.io/$DH_USERNAME
             fi
           done
-        
