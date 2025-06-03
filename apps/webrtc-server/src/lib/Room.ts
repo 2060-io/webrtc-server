@@ -8,6 +8,7 @@ import { config } from '../config/config.server'
 import { Device } from './room.interfaces'
 import * as throttle from '@sitespeed.io/throttle'
 import { Producer } from 'mediasoup/node/lib/types'
+import { getErrorMessage } from '../utils/error-utils'
 
 @Injectable()
 export class Room extends EventEmitter {
@@ -176,8 +177,10 @@ export class Room extends EventEmitter {
       try {
         await this.handlePeerRequest(peer, request, accept, reject)
       } catch (error) {
-        this.logger.error(`Failed to handle request [peerId:${peerId}, method:${request.method}]: ${error.message}`)
-        reject(error)
+        this.logger.error(
+          `Failed to handle request [peerId:${peerId}, method:${request.method}]: ${getErrorMessage(error)}`,
+        )
+        reject(error instanceof Error ? error : new Error(getErrorMessage(error)))
       }
     })
 
@@ -1128,7 +1131,7 @@ export class Room extends EventEmitter {
         } catch (error) {
           this.logger.error('Failed to stop network throttle: %o', error)
 
-          reject({ status: 500, error: `Failed to stop network throttle: ${error.message}` })
+          reject({ status: 500, error: `Failed to stop network throttle: ${getErrorMessage(error)}` })
         }
 
         break
@@ -1785,8 +1788,8 @@ export class Room extends EventEmitter {
         streamId: dataConsumer.sctpStreamParameters.streamId,
       }
     } catch (error) {
-      this.logger.error(`Failed to create DataConsumer: ${error.message}`)
-      throw new Error(`Failed to create DataConsumer: ${error.message}`)
+      this.logger.error(`Failed to create DataConsumer: ${getErrorMessage(error)}`)
+      throw new Error(`Failed to create DataConsumer: ${getErrorMessage(error)}`)
     }
   }
 
@@ -1852,8 +1855,8 @@ export class Room extends EventEmitter {
         id: dataProducer.id,
       }
     } catch (error) {
-      this.logger.error(`Failed to create DataProducer: ${error.message}`)
-      throw new Error(`Failed to create DataProducer: ${error.message}`)
+      this.logger.error(`Failed to create DataProducer: ${getErrorMessage(error)}`)
+      throw new Error(`Failed to create DataProducer: ${getErrorMessage(error)}`)
     }
   }
 
@@ -1945,7 +1948,7 @@ export class Room extends EventEmitter {
             volume: volume,
           })
           .catch((error: Error) => {
-            this.logger.error('Failed to notify active speaker:', error.message)
+            this.logger.error('Failed to notify active speaker:', getErrorMessage(error))
           })
       }
     })
@@ -1957,7 +1960,7 @@ export class Room extends EventEmitter {
       // Notify all connected peers about no active speaker.
       for (const peer of this.getJoinedPeers()) {
         peer.notify('activeSpeaker', { peerId: null }).catch((error: Error) => {
-          this.logger.error('Failed to notify silence event:', error.message)
+          this.logger.error('Failed to notify silence event:', getErrorMessage(error))
         })
       }
     })
@@ -1975,7 +1978,7 @@ export class Room extends EventEmitter {
         // Additional logic can be added here to notify peers or perform actions
         // based on the dominant speaker event.
       } catch (error) {
-        this.logger.error('Error handling "dominantspeaker" event:', error.message)
+        this.logger.error('Error handling "dominantspeaker" event:', getErrorMessage(error))
       }
     })
   }

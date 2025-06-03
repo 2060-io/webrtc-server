@@ -3,6 +3,7 @@ import { HttpService } from '@nestjs/axios'
 import { firstValueFrom } from 'rxjs'
 import { AxiosInstance } from 'axios'
 import axios from 'axios'
+import { getErrorMessage } from '../utils/error-utils'
 
 @Injectable()
 export class NotificationService {
@@ -31,7 +32,9 @@ export class NotificationService {
         const response = await firstValueFrom(this.httpService.post(eventNotificationUri, notificationData))
         this.logger.log(`[sendNotification] Notification sent to ${eventNotificationUri}: ${response.status}`)
       } catch (error) {
-        this.logger.error(`[sendNotification] Failed to send notification to ${eventNotificationUri}: ${error.message}`)
+        this.logger.error(
+          `[sendNotification] Failed to send notification to ${eventNotificationUri}: ${getErrorMessage(error)}`,
+        )
       }
     } else {
       this.logger.warn(
@@ -53,7 +56,7 @@ export class NotificationService {
         this.logger.log(`[post] Request sent to ${uri}: ${response.status}`)
         return response
       } catch (error) {
-        this.logger.error(`[post] Failed to send POST request to ${uri}: ${error.message}`)
+        this.logger.error(`[post] Failed to send POST request to ${uri}: ${getErrorMessage(error)}`)
         return error
       }
     } else {

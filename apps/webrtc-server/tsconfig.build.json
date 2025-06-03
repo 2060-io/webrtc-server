@@ -9,7 +9,6 @@
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
-    "useUnknownInCatchVariables": false,
     "declaration": true,
     "sourceMap": true,
     "strict": true,
