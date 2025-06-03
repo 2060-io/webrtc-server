@@ -26,6 +26,8 @@ import { Server } from 'https'
 import { NotificationService } from '../lib/notification.service'
 import { ConfigService } from '@nestjs/config'
 
+import { getErrorDetails, getErrorMessage } from '../utils/error-utils'
+
 @Injectable()
 export class RoomsService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(RoomsService.name)
@@ -75,8 +77,10 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
           this.logger.log(`Peer joined [roomId:${roomId}, peerId:${peerId}]`)
         })
         .catch((error) => {
-          this.logger.error(`Failed to handle connection [roomId:${roomId}, peerId:${peerId}]: ${error.message}`)
-          reject(500, error.message)
+          this.logger.error(
+            `Failed to handle connection [roomId:${roomId}, peerId:${peerId}]: ${getErrorMessage(error)}`,
+          )
+          reject(500, getErrorMessage(error))
         })
     })
   }
@@ -122,7 +126,7 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
       })
       this.logger.log('[Protoo-server] WebSocket initialized.')
     } catch (error) {
-      this.logger.error('Error during Protoo server initialization', error.stack)
+      this.logger.error('Error during Protoo server initialization', getErrorDetails(error))
       throw error
     }
   }
@@ -144,7 +148,7 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
         this.logger.log(`[registerLoadbalancer] Successfully registered WebRTC server with Load Balancer.`)
       } catch (error) {
         this.logger.error(
-          `[registerLoadbalancer] Failed to register with WebRTC Load Balancer at ${loadbalancerUrl}: ${error.message}`,
+          `[registerLoadbalancer] Failed to register with WebRTC Load Balancer at ${loadbalancerUrl}: ${getErrorMessage(error)}`,
         )
       }
     } else {
@@ -209,7 +213,7 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
 
         this.mediasoupWorkers.push(worker)
       } catch (error) {
-        this.logger.error(`Failed to initialize Mediasoup Worker: ${error.message}`)
+        this.logger.error(`Failed to initialize Mediasoup Worker: ${getErrorMessage(error)}`)
         throw new InternalServerErrorException('Failed to initialize Mediasoup workers')
       }
     }
@@ -325,8 +329,11 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
 
       return room
     } catch (error) {
-      this.logger.error(`Failed to create or retrieve room [roomId:${roomId}]: ${error.message}`)
-      throw new HttpException(`Failed to create or retrieve room: ${error.message}`, HttpStatus.INTERNAL_SERVER_ERROR)
+      this.logger.error(`Failed to create or retrieve room [roomId:${roomId}]: ${getErrorMessage(error)}`)
+      throw new HttpException(
+        `Failed to create or retrieve room: ${getErrorMessage(error)}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      )
     }
   }
 
@@ -397,8 +404,8 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
         roomId: roomIdToUse,
       }
     } catch (error) {
-      this.logger.error(`[createRoom] Error creating or retrieving room: ${error.message}`)
-      throw new HttpException({ error: error.message }, HttpStatus.INTERNAL_SERVER_ERROR)
+      this.logger.error(`[createRoom] Error creating or retrieving room: ${getErrorMessage(error)}`)
+      throw new HttpException({ error: getErrorMessage(error) }, HttpStatus.INTERNAL_SERVER_ERROR)
     }
   }
 
@@ -423,7 +430,7 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
       this.logger.log(`Broadcaster created in room "${roomId}"`)
       return broadcasterData
     } catch (error) {
-      this.logger.error(`Failed to create broadcaster in room "${roomId}": ${error.message}`)
+      this.logger.error(`Failed to create broadcaster in room "${roomId}": ${getErrorMessage(error)}`)
       throw error
     }
   }
@@ -447,7 +454,7 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
       this.logger.log(`Broadcaster with id "${broadcasterId}" deleted from room "${roomId}"`)
     } catch (error) {
       this.logger.error(
-        `Failed to delete broadcaster with id "${broadcasterId}" from room "${roomId}": ${error.message}`,
+        `Failed to delete broadcaster with id "${broadcasterId}" from room "${roomId}": ${getErrorMessage(error)}`,
       )
       throw error
     }
@@ -490,7 +497,7 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
       })
     } catch (error) {
       // Throw a generic error if the transport creation fails
-      throw new Error(`Failed to create broadcaster transport: ${error.message}`)
+      throw new Error(`Failed to create broadcaster transport: ${getErrorMessage(error)}`)
     }
   }
 
@@ -521,7 +528,7 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
         dtlsParameters: dto.dtlsParameters,
       })
     } catch (error) {
-      throw new Error(`Failed to connect broadcaster transport: ${error.message}`)
+      throw new Error(`Failed to connect broadcaster transport: ${getErrorMessage(error)}`)
     }
   }
 
@@ -556,7 +563,7 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
 
       return producerData
     } catch (error) {
-      throw new BadRequestException(`Failed to create broadcaster producer: ${error.message}`)
+      throw new BadRequestException(`Failed to create broadcaster producer: ${getErrorMessage(error)}`)
     }
   }
 
