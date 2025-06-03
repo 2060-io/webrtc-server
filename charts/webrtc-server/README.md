@@ -29,7 +29,7 @@ helm lint ./charts/webrtc-server
 Preview the generated Kubernetes manifests:
 
 ```bash
-helm template 2060-webrtc-demos-blue ./charts/webrtc-server --namespace demos
+helm template 2060-webrtc-demos ./charts/webrtc-server --namespace demos
 ```
 
 ### 3. Dry-Run Installation
@@ -37,7 +37,7 @@ helm template 2060-webrtc-demos-blue ./charts/webrtc-server --namespace demos
 Simulate the installation without making changes to your cluster:
 
 ```bash
-helm install --dry-run --debug 2060-webrtc-demos-blue ./charts/webrtc-server --namespace demos
+helm install --dry-run --debug 2060-webrtc-demos ./charts/webrtc-server --namespace demos
 ```
 
 ### 4. Install the Chart
@@ -45,7 +45,7 @@ helm install --dry-run --debug 2060-webrtc-demos-blue ./charts/webrtc-server --n
 Ensure the target namespace already exists.
 
 ```bash
-helm upgrade --install 2060-webrtc-demos-blue ./charts/webrtc-server --namespace demos --wait 
+helm upgrade --install 2060-webrtc-demos ./charts/webrtc-server --namespace demos --wait 
 ```
 
 ---
@@ -66,7 +66,7 @@ All configurable parameters are located in the `values.yaml` file. You can adjus
 To remove the deployed release:
 
 ```bash
-helm uninstall 2060-webrtc-demos-blue --namespace demos
+helm uninstall 2060-webrtc-demos --namespace demos
 ```
 
 ## Notes

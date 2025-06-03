@@ -31,7 +31,7 @@ helm lint ./charts/webrtc-client
 Preview the generated Kubernetes manifests:
 
 ```bash
-helm template 2060-webrtc-client-demos-blue ./charts/webrtc-client --namespace demos
+helm template 2060-webrtc-client-demos ./charts/webrtc-client --namespace demos
 ```
 
 ### 3. Dry-Run Installation
@@ -39,7 +39,7 @@ helm template 2060-webrtc-client-demos-blue ./charts/webrtc-client --namespace d
 Simulate the installation without making changes to your cluster:
 
 ```bash
-helm install --dry-run --debug 2060-webrtc-client-demo-blue ./charts/webrtc-client --namespace demos
+helm install --dry-run --debug 2060-webrtc-client-demo ./charts/webrtc-client --namespace demos
 ```
 
 ### 4. Install the Chart
@@ -47,7 +47,7 @@ helm install --dry-run --debug 2060-webrtc-client-demo-blue ./charts/webrtc-clie
 If the target namespace already exists, ensure `createNamespace` is set to `false` in `values.yaml`. Otherwise, set it to `true` to have Helm create the namespace automatically.
 
 ```bash
-helm install 2060-webrtc-client-demo-blue ./charts/webrtc-client --namespace demos
+helm install 2060-webrtc-client-demo ./charts/webrtc-client --namespace demos
 ```
 
 ## Configuration
@@ -77,7 +77,7 @@ ingress:
 ## Installation example with serverName
 
 ```bash
-helm install 2060-webrtc-client-demos-blue ./charts/webrtc-client \
+helm install 2060-webrtc-client-demos ./charts/webrtc-client \
   --namespace demos \
   --set configMap.serverName=webrtc.demos.dev.2060.io \
   --set configMap.protooPort=443 --wait
@@ -90,7 +90,7 @@ helm install 2060-webrtc-client-demos-blue ./charts/webrtc-client \
 To remove the deployed release:
 
 ```bash
-helm uninstall 2060-webrtc-client-demos-blue --namespace demos-dev
+helm uninstall 2060-webrtc-client-demos --namespace demos-dev
 ```
 
 ## Notes
