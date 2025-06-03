@@ -51,3 +51,21 @@ jobs:
           docker push $DH_USERNAME/$IMAGE_NAME:v${{steps.get_version.outputs.major}}.${{steps.get_version.outputs.minor}}
           docker push $DH_USERNAME/$IMAGE_NAME:v${{steps.get_version.outputs.major}}.${{steps.get_version.outputs.minor}}.${{steps.get_version.outputs.patch}}
           docker push $DH_USERNAME/$IMAGE_NAME:${{steps.get_version.outputs.version}}
+
+      - name: Log in to Docker Hub Helm Registry
+        if: steps.get_version.outputs.is-semver == 'true'
+        run: |
+          echo "$DH_TOKEN" | helm registry login -u "$DH_USERNAME" --password-stdin docker.io
+
+      - name: Push Helm charts to Docker Hub OCI repo
+        if: steps.get_version.outputs.is-semver == 'true'
+        run: |
+          for chart in ./charts/*; do
+            if [ -d "$chart" ]; then
+              chart_name=$(basename "$chart")
+              sed -i "s/^version:.*/version: "${{steps.get_version.outputs.version}}"/" "$chart/Chart.yaml"
+              helm dependency update "$chart"
+              helm package "$chart" -d ./charts
+              helm push ./charts/"$chart_name"-"${{steps.get_version.outputs.version}}".tgz oci://docker.io/$DH_USERNAME
+            fi
+          done

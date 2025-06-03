@@ -9,8 +9,6 @@ secret:
   name: webrtc-webclient.example.io-cert
        
 deployment:
-  color: blue
-  first: true
   name: webrtc-webclient
   labels:
     app: webrtc-webclient

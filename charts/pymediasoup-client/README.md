@@ -15,7 +15,7 @@ This Helm chart deploys the Pymediasoup Client application along with the necess
 Ensure the chart is correctly formatted:
 
 ```bash
-helm lint ./deployments/pymediasoup-client
+helm lint ./charts/pymediasoup-client
 ```
 
 ### 2️⃣ Render Templates
@@ -23,7 +23,7 @@ helm lint ./deployments/pymediasoup-client
 Preview the generated Kubernetes manifests:
 
 ```bash
-helm template <release-name> ./deployments/pymediasoup-client --namespace <your-namespace>
+helm template <release-name> ./charts/pymediasoup-client --namespace <your-namespace>
 ```
 
 ### 3️⃣ Dry-Run Installation
@@ -31,13 +31,13 @@ helm template <release-name> ./deployments/pymediasoup-client --namespace <your-
 Simulate the installation without making changes to your cluster:
 
 ```bash
-helm install --dry-run --debug <release-name> ./deployments/pymediasoup-client --namespace <your-namespace>
+helm install --dry-run --debug <release-name> ./charts/pymediasoup-client --namespace <your-namespace>
 ```
 
 ### 4️⃣ Install the Chart
 
 ```bash
-helm upgrade --install <release-name> ./deployments/pymediasoup-client --namespace <your-namespace>
+helm upgrade --install <release-name> ./charts/pymediasoup-client --namespace <your-namespace>
 ```
 
 **Note:**  
@@ -46,7 +46,7 @@ helm upgrade --install <release-name> ./deployments/pymediasoup-client --namespa
 - Example:
 
 ```bash
-helm upgrade --install chatbot-dev ./deployments/pymediasoup-client --namespace 2060-core-dev
+helm upgrade --install chatbot-dev ./charts/pymediasoup-client --namespace 2060-core-dev
 ```
 
 ## Configuration

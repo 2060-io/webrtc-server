@@ -1,0 +1,68 @@
+
+app:
+  name: webrtc-server-0
+
+namespace: 
+  name: default
+
+statefulset:
+  name: webrtc-loadbalancer
+  serviceName: webrtc-loadbalancer-service
+  replicas: 1
+  containerName: webrtc-loadbalancer-container
+  image:
+    repository: io2060/webrtc-loadbalancer
+    tag: dev
+    pullPolicy: Always
+  storage: 1Gi
+  resources:
+    webrtcLoadbalancer:
+      requests:
+        cpu: "50m"
+        memory: "128Mi"
+      limits:
+        cpu: "200m"
+        memory: "256Mi"
+    appCheckProxy:
+      requests:
+        cpu: "100m"
+        memory: "256"
+      limits:
+        cpu: "300m"
+        memory: "512Mi"
+
+env:
+  LOG_LEVEL: "3"
+  APP_PORT: "3001"
+  REDIS_URL: "redis://redis-service.default:6379"
+  HEALTH_CHECK_INTERVAL: "30000"
+
+service:
+  name: "webrtc-loadbalancer"
+  ports:
+    http: 80
+    appCheck: 3100
+
+ingress:
+  name: webrtc-loadbalancer
+  enabled: true
+  host: "webrtc.example.io"
+  tlsSecretName: "webrtc.example.io-cert"
+
+configMap:
+  name: app-check-proxy-webrtc-loadbalancer
+  key: ENDPOINT_URLS
+
+# Environment variables for app-check-proxy
+appCheckProxy:
+  name: app-check-proxy-container
+  image:
+    repository: io2060/app-check-proxy
+    tag: "dev"
+    pullPolicy: Always
+  env:
+    APP_PORT: "3100"
+    FIREBASE_CFG_FILE: "/config/firebase-cfg.json"
+  configMap:
+    name: app-check-proxy-webrtc-loadbalancer
+    key: ENDPOINT_URLS
