@@ -1,6 +1,7 @@
 name: webrtc-pymediasoup-client
 namespace: default
 replicas: 1
+domain: example.io
 images:
   backend: 
     repository: io2060/webrtc-pymediasoup-client
@@ -11,4 +12,3 @@ images:
       debug: 1
       pythonunbuffered: 1
       video_url: https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_2mb.mp4
-      domain: example.io

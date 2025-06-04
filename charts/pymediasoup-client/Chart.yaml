@@ -1,5 +1,5 @@
 apiVersion: v2
-name: pymediasoup-client
+name: pymediasoup-client-chart
 description: A simple Helm chart by pymediasoup client
 version: 0.0.2
 appVersion: dev

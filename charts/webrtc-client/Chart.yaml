@@ -1,5 +1,5 @@
 apiVersion: v2
-name: webrtc-webclient
+name: webrtc-client-chart
 version: 0.0.1
 description: Helm chart for deploying webrtc-webclient
 type: application
