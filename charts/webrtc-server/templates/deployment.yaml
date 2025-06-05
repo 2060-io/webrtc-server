@@ -41,7 +41,7 @@ spec:
                 name: {{ tpl .Values.service.name . }}
                 port:
                   number: 443
-          {{- if and (hasKey .Values.extraEnv "LOADBALANCER_URL") (hasKey .Values.extraEnv "SERVICE_URL") }}
+          {{- if .Values.ingress.loadBalancerMode }}
           - path: /rooms
             pathType: Prefix
             backend:
