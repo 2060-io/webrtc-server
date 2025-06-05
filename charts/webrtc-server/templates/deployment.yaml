@@ -41,6 +41,7 @@ spec:
                 name: {{ tpl .Values.service.name . }}
                 port:
                   number: 443
+          {{- if .Values.ingress.loadBalancerMode }}
           - path: /rooms
             pathType: Prefix
             backend:
@@ -48,6 +49,7 @@ spec:
                 name: {{ tpl .Values.service.name . }}
                 port:
                   number: 3100
+          {{- end }}
 ---
 {{/* StatefulSet */}}
 apiVersion: apps/v1

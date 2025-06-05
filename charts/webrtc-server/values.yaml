@@ -19,6 +19,7 @@ ingress:
   name: webrtc-demos-ingress
   host: webrtc.example.io
   tlsSecret: webrtc.example.io-cert
+  loadBalancerMode: false
 
 # Application name used in labels
 app:
