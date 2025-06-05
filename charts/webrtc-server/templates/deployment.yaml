@@ -41,13 +41,6 @@ spec:
                 name: {{ tpl .Values.service.name . }}
                 port:
                   number: 443
-          - path: /rooms
-            pathType: Prefix
-            backend:
-              service:
-                name: {{ tpl .Values.service.name . }}
-                port:
-                  number: 3100
 ---
 {{/* StatefulSet */}}
 apiVersion: apps/v1
