@@ -80,8 +80,8 @@ spec:
     spec:
       containers:
         - name: {{ .Values.statefulset.containerName }}
-          image: {{ .Values.statefulset.image.repository }}:{{ .Values.statefulset.image.tag }}
-          imagePullPolicy: {{ .Values.statefulset.image.pullPolicy }}
+          image: io2060/webrtc-loadbalancer:{{ .Chart.Version }}
+          imagePullPolicy: {{ .Values.statefulset.pullPolicy }}
           resources:
             requests:
               cpu: {{ .Values.statefulset.resources.webrtcLoadbalancer.requests.cpu | quote }}
@@ -106,10 +106,10 @@ spec:
               name: https
               protocol: TCP
         - name: {{ .Values.appCheckProxy.name }}
-          image: "{{ .Values.appCheckProxy.image.repository }}:{{ .Values.appCheckProxy.image.tag }}"
+          image: io2060/app-check-proxy:v1.0.0
           securityContext:
             readOnlyRootFilesystem: false
-          imagePullPolicy: {{ .Values.appCheckProxy.image.pullPolicy }}
+          imagePullPolicy: {{ .Values.appCheckProxy.pullPolicy }}
           resources:
             requests:
               cpu: {{ .Values.statefulset.resources.appCheckProxy.requests.cpu | quote }}

@@ -134,8 +134,8 @@ spec:
     spec:
       containers:
         - name: {{ .Values.deployment.name }}
-          image: "{{ .Values.deployment.image.repository }}:{{ .Values.deployment.image.tag }}"
-          imagePullPolicy: "{{ .Values.deployment.image.pullPolicy }}"
+          image: io2060/webrtc-webclient:{{ .Chart.Version }}
+          imagePullPolicy: "{{ .Values.deployment.pullPolicy }}"
           ports:
             - containerPort: 443
           volumeMounts:

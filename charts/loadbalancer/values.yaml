@@ -10,12 +10,9 @@ statefulset:
   serviceName: webrtc-loadbalancer-service
   replicas: 1
   containerName: webrtc-loadbalancer-container
-  image:
-    repository: io2060/webrtc-loadbalancer
-    tag: dev
-    pullPolicy: Always
+  pullPolicy: Always
   storage: 1Gi
-  resources:
+  resources: # Define resource requests and limits for the container
     webrtcLoadbalancer:
       requests:
         cpu: "50m"
@@ -56,10 +53,7 @@ configMap:
 # Environment variables for app-check-proxy
 appCheckProxy:
   name: app-check-proxy-container
-  image:
-    repository: io2060/app-check-proxy
-    tag: "dev"
-    pullPolicy: Always
+  pullPolicy: Always
   env:
     APP_PORT: "3100"
     FIREBASE_CFG_FILE: "/config/firebase-cfg.json"

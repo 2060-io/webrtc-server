@@ -19,7 +19,7 @@ ingress:
   name: webrtc-demos-ingress
   host: webrtc.example.io
   tlsSecret: webrtc.example.io-cert
-  loadBalancerMode: false
+  loadBalancerMode: false # Set to true if you want to use a load balancer for the /rooms endpoint
 
 # Application name used in labels
 app:
@@ -37,12 +37,9 @@ statefulset:
   serviceName: "webrtc-demos-service"
   replicas: 1
   containerName: webrtc-demos-container
-  image:
-    repository: io2060/webrtc-server
-    tag: dev
-    pullPolicy: Always
+  pullPolicy: Always
   storage: 1Gi
-  resources:
+  resources: # Default resources requests and limits for the container
     requests:
       cpu: "200m"
       memory: "256Mi"

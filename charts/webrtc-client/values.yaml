@@ -12,12 +12,9 @@ deployment:
   name: webrtc-webclient
   labels:
     app: webrtc-webclient
-  image:
-    repository: io2060/webrtc-webclient
-    tag: dev
-    pullPolicy: Always
+  pullPolicy: Always
   replicas: 1
-  resources:
+  resources: # Default resources requests and limits for the container
     limits:
       memory: "512Mi"
       cpu: "1"
