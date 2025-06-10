@@ -71,7 +71,7 @@ spec:
       restartPolicy: Always
       containers:
         - name: {{ tpl .Values.statefulset.containerName . }}
-          image: io2060/webrtc-server:{{ .Charts.Version }}
+          image: io2060/webrtc-server:{{ .Chart.Version }}
           imagePullPolicy: {{ .Values.statefulset.pullPolicy }}
           resources:
             requests:
