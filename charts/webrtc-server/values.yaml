@@ -39,7 +39,7 @@ statefulset:
   containerName: webrtc-demos-container
   pullPolicy: Always
   storage: 1Gi
-  resources:
+  resources: # Default resources requests and limits for the container
     requests:
       cpu: "200m"
       memory: "256Mi"
