@@ -134,7 +134,7 @@ spec:
     spec:
       containers:
         - name: {{ .Values.deployment.name }}
-          image: io2060/webrtc-webclient:{{ .Chart.Version }}
+          image: io2060/webrtc-webclient:1.1.0-dev.28
           imagePullPolicy: "{{ .Values.deployment.pullPolicy }}"
           ports:
             - containerPort: 443
