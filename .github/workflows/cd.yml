@@ -116,9 +116,9 @@ jobs:
           for chart in ./charts/*; do
             if [ -d "$chart" ]; then
               chart_name=$(grep '^name:' "$chart/Chart.yaml" | awk '{print $2}')
-              sed -i "s/^version:.*/version: $RELEASE_VERSION/" "$chart/Chart.yaml"
+              sed -i "s/^version:.*/version: v$RELEASE_VERSION/" "$chart/Chart.yaml"
               helm dependency update "$chart"
               helm package "$chart" -d ./charts
-              helm push ./charts/"$chart_name"-$RELEASE_VERSION.tgz oci://docker.io/$DH_USERNAME
+              helm push ./charts/"$chart_name"-v$RELEASE_VERSION.tgz oci://docker.io/$DH_USERNAME
             fi
           done
