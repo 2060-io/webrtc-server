@@ -14,7 +14,7 @@ deployment:
     app: webrtc-webclient
   pullPolicy: Always
   replicas: 1
-  resources:
+  resources: # Default resources requests and limits for the container
     limits:
       memory: "512Mi"
       cpu: "1"
