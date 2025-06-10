@@ -106,7 +106,7 @@ spec:
               name: https
               protocol: TCP
         - name: {{ .Values.appCheckProxy.name }}
-          image: io2060/app-check-proxy:v1.0.0-dev.19
+          image: io2060/app-check-proxy:v1.0.0
           securityContext:
             readOnlyRootFilesystem: false
           imagePullPolicy: {{ .Values.appCheckProxy.pullPolicy }}
