@@ -58,19 +58,19 @@ spec:
     spec:
       containers:
         - name: {{ .Values.name }}
-          image: "{{ .Values.images.backend.repository }}:{{ .Values.images.backend.tag }}"
+          image: io2060/webrtc-pymediasoup-client:{{ .Chart.Version }}
           imagePullPolicy: Always
           env:
             - name: FLASK_APP
-              value: "{{ .Values.images.backend.env.flask_app }}"
+              value: "{{ .Values.backend.env.flask_app }}"
             - name: FLASK_ENV
-              value: "{{ .Values.images.backend.env.flask_env }}"
+              value: "{{ .Values.backend.env.flask_env }}"
             - name: FLASK_DEBUG
-              value: "{{ .Values.images.backend.env.debug }}"
+              value: "{{ .Values.backend.env.debug }}"
             - name: PYTHONUNBUFFERED
-              value: "{{ .Values.images.backend.env.pythonunbuffered }}"
+              value: "{{ .Values.backend.env.pythonunbuffered }}"
             - name: DEFAULT_VIDEO_SRC_URL
-              value: "{{ .Values.images.backend.env.video_url }}"
+              value: "{{ .Values.backend.env.video_url }}"
           ports:
             - containerPort: 5000              
               protocol: TCP          
