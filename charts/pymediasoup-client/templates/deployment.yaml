@@ -58,7 +58,7 @@ spec:
     spec:
       containers:
         - name: {{ .Values.name }}
-          image: io2060/webrtc-pymediasoup-client:1.1.0-dev.28
+          image: io2060/webrtc-pymediasoup-client-demo:dev
           imagePullPolicy: Always
           env:
             - name: FLASK_APP
