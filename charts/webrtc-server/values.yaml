@@ -1,9 +1,6 @@
 # Increase this value when you want install a new instance webrtc-server
 # instanceId: 1
 
-namespace:
-  name: default
-
 # Service configuration
 service:
   # Recommended for multi-instance mode: Use instanceId to differentiate service names.

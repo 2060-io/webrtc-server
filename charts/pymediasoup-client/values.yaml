@@ -1,5 +1,4 @@
 name: webrtc-pymediasoup-client
-namespace: default
 replicas: 1
 domain: example.io
 backend: 

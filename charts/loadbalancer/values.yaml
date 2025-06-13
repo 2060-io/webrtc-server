@@ -2,9 +2,6 @@
 app:
   name: webrtc-server-0
 
-namespace: 
-  name: default
-
 statefulset:
   name: webrtc-loadbalancer
   serviceName: webrtc-loadbalancer-service

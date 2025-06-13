@@ -4,7 +4,6 @@
 
 This Helm chart deploys the loadbalancer application along with the necessary Kubernetes resources. It includes:
 
-- **Namespace** (optional): Can be created by the chart or managed externally.
 - **Service**: Exposes the application.
 - **Ingress**: Routes external traffic to the service.
 - **ConfigMap**: To use app-check-proxy endpoints
@@ -63,7 +62,6 @@ helm install mi-release ./charts/loadbalancer --namespace <your-namespace>
 
 All configurable parameters are located in the `values.yaml` file. You can adjust:
 
-- **Namespace**: The target namespace and whether it should be created.
 - **Service**: The name and configuration of the Service.
 - **Ingress**: Hostname and TLS settings.
 - **RBAC**: Names for ServiceAccount, Role, and RoleBinding.
