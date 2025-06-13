@@ -15,7 +15,8 @@ ingress:
   # name: webrtc-server-{{ .Values.instanceId }}-ingress
   # host: webrtc-server-{{ .Values.instanceId }}
   name: webrtc-demos-ingress
-  host: webrtc
+  host: webrtc.{{ .Values.global.domain }}
+  tlsSecret: webrtc.{{ .Values.global.domain }}-cert
   loadBalancerMode: false # Set to true if you want to use a load balancer for the /rooms endpoint
 
 # Application name used in labels

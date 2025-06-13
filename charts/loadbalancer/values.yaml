@@ -43,7 +43,8 @@ service:
 ingress:
   name: webrtc-loadbalancer
   enabled: true
-  host: webrtc
+  host: webrtc.{{ .Values.global.domain }}
+  tlsSecret: webrtc.{{ .Values.global.domain }}-cert
 
 configMap:
   name: app-check-proxy-webrtc-loadbalancer

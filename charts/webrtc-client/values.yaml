@@ -31,7 +31,8 @@ service:
 ingress:
   name: webrtc-client-demos-ingress
   enabled: true
-  host: webrtc-webclient
+  host: webrtc-webclient.{{ .Values.global.domain }}
+  tlsSecret: webrtc-webclient.{{ .Values.global.domain }}-cert
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     nginx.ingress.kubernetes.io/backend-protocol: HTTPS  
