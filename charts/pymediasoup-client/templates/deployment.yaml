@@ -26,10 +26,10 @@ spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - {{ .Values.name }}.{{ .Values.domain }}
-      secretName: {{ .Values.name }}.{{ .Values.domain }}-cert
+        - {{ .Values.name }}.{{ .Values.global.domain }}
+      secretName: {{ .Values.name }}.{{ .Values.global.domain }}-cert
   rules:
-    - host: {{ .Values.name }}.{{ .Values.domain }}
+    - host: {{ .Values.name }}.{{ .Values.global.domain }}
       http:
         paths:
           - path: /

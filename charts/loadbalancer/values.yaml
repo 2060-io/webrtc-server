@@ -1,4 +1,7 @@
 
+global:
+  domain: example.io # Replace with your actual domain
+
 app:
   name: webrtc-server-0
 
@@ -40,8 +43,7 @@ service:
 ingress:
   name: webrtc-loadbalancer
   enabled: true
-  host: "webrtc.example.io"
-  tlsSecretName: "webrtc.example.io-cert"
+  host: webrtc
 
 configMap:
   name: app-check-proxy-webrtc-loadbalancer

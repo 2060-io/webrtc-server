@@ -1,6 +1,8 @@
+global:
+  domain: example.io
+
 name: webrtc-pymediasoup-client
 replicas: 1
-domain: example.io
 backend: 
   env:
     flask_app: app.py

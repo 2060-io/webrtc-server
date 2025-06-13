@@ -50,12 +50,12 @@ data:
         index index.html;
 
         if ($query_string = "") {
-            return 302 /?domain={{ .Values.configMap.serverName }}&protooPort={{ .Values.configMap.protooPort }};
+            return 302 /?domain={{ .Values.configMap.serverName }}.{{ .Values.global.domain }}&protooPort={{ .Values.configMap.protooPort }};
         }
        
         set $query $query_string;
         if ($query_string !~* "domain=") {
-            set $query "${query}&domain={{ .Values.configMap.serverName }}";
+            set $query "${query}&domain={{ .Values.configMap.serverName }}.{{ .Values.global.domain }}";
         }
         if ($query_string !~* "protooPort=") {
             set $query "${query}&protooPort=443";
@@ -99,10 +99,10 @@ spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - {{ .Values.ingress.host }}
-      secretName: {{ .Values.ingress.tlsSecretName }}
+        - {{ .Values.ingress.host }}.{{ Values.global.domain }}
+      secretName: {{ .Values.ingress.host }}.{{ Values.global.domain }}-cert
   rules:
-    - host: {{ .Values.ingress.host }}
+    - host: {{ .Values.ingress.host }}.{{ Values.global.domain }}
       http:
         paths:
           - path: /
@@ -161,7 +161,7 @@ spec:
       volumes:
         - name: tls-certificates
           secret:
-            secretName: {{ .Values.secret.name }}
+            secretName: {{ .Values.secret.name }}.{{ .Values.global.domain }}-cert
         - name: nginx-config
           configMap:
             name: {{ .Values.configMap.name }}

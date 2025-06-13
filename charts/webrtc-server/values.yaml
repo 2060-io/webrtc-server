@@ -1,5 +1,7 @@
 # Increase this value when you want install a new instance webrtc-server
 # instanceId: 1
+global:
+  domain: example.io # Change this to your actual domain
 
 # Service configuration
 service:
@@ -11,11 +13,9 @@ service:
 ingress:
   # Recommended for multi-instance mode: Use instanceId to differentiate ingress names and hosts.
   # name: webrtc-server-{{ .Values.instanceId }}-ingress
-  # host: webrtc-server-{{ .Values.instanceId }}.example.io
-  # tlsSecret: webrtc-server-{{ .Values.instanceId }}.example.io-cert
+  # host: webrtc-server-{{ .Values.instanceId }}
   name: webrtc-demos-ingress
-  host: webrtc.example.io
-  tlsSecret: webrtc.example.io-cert
+  host: webrtc
   loadBalancerMode: false # Set to true if you want to use a load balancer for the /rooms endpoint
 
 # Application name used in labels
@@ -57,16 +57,16 @@ env:
   MEDIASOUP_CLIENT_ICESERVER_USER: "user"
   MEDIASOUP_CLIENT_ICESERVER_PASS: "password"
   # Recommended for multi-instance mode: Use instanceId to differentiate ingress hosts.
-  # MEDIASOUP_INGRESS_HOST: "webrtc-server-{{ .Values.instanceId }}.example.io"
-  MEDIASOUP_INGRESS_HOST: "webrtc.example.io"
+  # MEDIASOUP_INGRESS_HOST: "webrtc-server-{{ .Values.instanceId }}.{{ .Values.global.domain }}"
+  MEDIASOUP_INGRESS_HOST: "webrtc.{{ .Values.global.domain }}"
   HTTPS_CERT_FULLCHAIN: "/config/certificates/tls.crt"
   HTTPS_CERT_PRIVKEY: "/config/certificates/tls.key"
 
   # Secret configuration
 secret:
   # Recommended for multi-instance mode: Use instanceId to differentiate secret names.
-  # name: webrtc-server-{{ .Values.instanceId }}.example.io-cert
-  name: webrtc.example.io-cert
+  # name: webrtc-server-{{ .Values.instanceId }}.{{ .Values.global.domain }}-cert
+  name: "webrtc.{{ .Values.global.domain }}-cert"
 
 extraEnv: []
 # extraEnv: 
