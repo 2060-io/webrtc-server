@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name:  {{ .Values.service.name }}
-  namespace: {{ .Values.namespace.name }}
+  namespace: {{ .Release.Namespace }}
 spec:
   selector:
     app: {{ .Values.app.name }}
@@ -20,17 +20,17 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{.Values.configMap.name}}
-  namespace: {{ .Values.namespace.name }}
+  namespace: {{ .Release.Namespace }}
 data:
   ENDPOINT_URLS: |
     [
       {
         "pattern": "/rooms.*",
-        "baseUrl": "http://webrtc-loadbalancer.{{ .Values.namespace.name }}"
+        "baseUrl": "http://webrtc-loadbalancer.{{ .Release.Namespace }}"
       },
       {
         "pattern": "/healt.*",
-        "baseUrl": "http://webrtc-loadbalancer.{{ .Values.namespace.name }}"
+        "baseUrl": "http://webrtc-loadbalancer.{{ .Release.Namespace }}"
       }
     ]
 
@@ -40,17 +40,17 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{.Values.ingress.name }}
-  namespace: {{ .Values.namespace.name }}
+  namespace: {{ .Release.Namespace }}
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - {{ .Values.ingress.host }}
-      secretName: {{ .Values.ingress.tlsSecretName }}
+        - {{ tpl .Values.ingress.host . }}
+      secretName: {{ tpl .Values.ingress.tlsSecret . }}
   rules:
-    - host: {{ .Values.ingress.host }}
+    - host: {{ tpl .Values.ingress.host . }}
       http:
         paths:
           - path: /
@@ -66,7 +66,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: {{ .Values.statefulset.name }}
-  namespace: {{ .Values.namespace.name }}
+  namespace: {{ .Release.Namespace }}
 spec:
   serviceName: {{ .Values.statefulset.serviceName }}
   replicas: {{ .Values.statefulset.replicas }}

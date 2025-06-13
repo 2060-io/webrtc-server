@@ -1,12 +1,13 @@
-namespace: default
+global:
+  domain: example.io
 
 configMap:
   name: webrtc-client-demos-config
-  serverName: webrtc.example.io
+  serverName: webrtc.{{ .Values.global.domain }}
   protooPort: 443
 
 secret:
-  name: webrtc-webclient.example.io-cert
+  name: webrtc-webclient.{{ .Values.global.domain }}-cert
        
 deployment:
   name: webrtc-webclient
@@ -30,8 +31,8 @@ service:
 ingress:
   name: webrtc-client-demos-ingress
   enabled: true
-  host: webrtc-webclient.example.io
-  tlsSecretName: webrtc-webclient.example.io-cert
+  host: webrtc-webclient.{{ .Values.global.domain }}
+  tlsSecret: webrtc-webclient.{{ .Values.global.domain }}-cert
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     nginx.ingress.kubernetes.io/backend-protocol: HTTPS  

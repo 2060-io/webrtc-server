@@ -4,7 +4,6 @@
 
 This Helm chart deploys the webrtc-client application along with the necessary Kubernetes resources. It includes:
 
-- **Namespace** (optional): Can be created by the chart or managed externally.
 - **Service**: Exposes the application.
 - **Ingress**: Routes external traffic to the service.
 - **ConfigMap**: To use app-check-proxy endpoints
@@ -71,7 +70,6 @@ ingress:
   name: webrtc-client-demos-ingress
   enabled: true
   host: webrtc-webclient.demos.dev.2060.io
-  tlsSecretName: webrtc-webclient.demos.dev.2060.io-cert
 ```
 
 ## Installation example with serverName
