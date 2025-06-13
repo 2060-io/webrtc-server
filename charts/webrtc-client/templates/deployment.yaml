@@ -50,12 +50,12 @@ data:
         index index.html;
 
         if ($query_string = "") {
-            return 302 /?domain={{ .Values.configMap.serverName }}.{{ .Values.global.domain }}&protooPort={{ .Values.configMap.protooPort }};
+            return 302 /?domain={{ tpl .Values.configMap.serverName . }}&protooPort={{ .Values.configMap.protooPort }};
         }
        
         set $query $query_string;
         if ($query_string !~* "domain=") {
-            set $query "${query}&domain={{ .Values.configMap.serverName }}.{{ .Values.global.domain }}";
+            set $query "${query}&domain={{ tpl .Values.configMap.serverName . }}";
         }
         if ($query_string !~* "protooPort=") {
             set $query "${query}&protooPort=443";
@@ -161,7 +161,7 @@ spec:
       volumes:
         - name: tls-certificates
           secret:
-            secretName: {{ .Values.secret.name }}.{{ .Values.global.domain }}-cert
+            secretName: {{ tpl .Values.secret.name . }}
         - name: nginx-config
           configMap:
             name: {{ .Values.configMap.name }}

@@ -3,11 +3,11 @@ global:
 
 configMap:
   name: webrtc-client-demos-config
-  serverName: webrtc
+  serverName: webrtc.{{ .Values.global.domain }}
   protooPort: 443
 
 secret:
-  name: webrtc-webclient
+  name: webrtc-webclient.{{ .Values.global.domain }}-cert
        
 deployment:
   name: webrtc-webclient
