@@ -35,23 +35,35 @@ jobs:
         run: |
           echo "$DH_TOKEN" | docker login -u "$DH_USERNAME" --password-stdin
 
-      - name: Build Docker image
+      - name: Build Docker images
         if: steps.get_version.outputs.is-semver == 'true'
         run: |
-          docker build -f Dockerfile -t $DH_USERNAME/$IMAGE_NAME:${{steps.get_version.outputs.version}} .
+          for APP in webrtc-server loadbalancer; do
+            IMAGE_NAME=$APP
+            if [ "$APP" == "loadbalancer" ]; then
+              IMAGE_NAME="webrtc-load-balancer"
+            fi
+            cp pnpm-lock.yaml apps/$APP/
+            docker build -f apps/$APP/Dockerfile -t $DH_USERNAME/$IMAGE_NAME:${{steps.get_version.outputs.version}} apps/$APP/
+          done
 
-      - name: Add tags to Docker image and push to Docker Hub
+      - name: Add tags to Docker images and push to Docker Hub
         if: steps.get_version.outputs.is-semver == 'true'
         run: |
-          docker tag $DH_USERNAME/$IMAGE_NAME:${{steps.get_version.outputs.version}} $DH_USERNAME/$IMAGE_NAME:v${{steps.get_version.outputs.major}}
-          docker tag $DH_USERNAME/$IMAGE_NAME:${{steps.get_version.outputs.version}} $DH_USERNAME/$IMAGE_NAME:v${{steps.get_version.outputs.major}}.${{steps.get_version.outputs.minor}}
-          docker tag $DH_USERNAME/$IMAGE_NAME:${{steps.get_version.outputs.version}} $DH_USERNAME/$IMAGE_NAME:v${{steps.get_version.outputs.major}}.${{steps.get_version.outputs.minor}}.${{steps.get_version.outputs.patch}}
-          docker tag $DH_USERNAME/$IMAGE_NAME:${{steps.get_version.outputs.version}} $DH_USERNAME/$IMAGE_NAME:v${{steps.get_version.outputs.version-without-v}}
-          docker push $DH_USERNAME/$IMAGE_NAME:v${{steps.get_version.outputs.major}}
-          docker push $DH_USERNAME/$IMAGE_NAME:v${{steps.get_version.outputs.major}}.${{steps.get_version.outputs.minor}}
-          docker push $DH_USERNAME/$IMAGE_NAME:v${{steps.get_version.outputs.major}}.${{steps.get_version.outputs.minor}}.${{steps.get_version.outputs.patch}}
-          docker push $DH_USERNAME/$IMAGE_NAME:${{steps.get_version.outputs.version}}
-
+          for APP in webrtc-server loadbalancer; do
+            IMAGE_NAME=$APP
+            if [ "$APP" == "loadbalancer" ]; then
+              IMAGE_NAME="webrtc-load-balancer"
+            fi        
+            docker tag $DH_USERNAME/$IMAGE_NAME:${{steps.get_version.outputs.version}} $DH_USERNAME/$IMAGE_NAME:v${{steps.get_version.outputs.major}}
+            docker tag $DH_USERNAME/$IMAGE_NAME:${{steps.get_version.outputs.version}} $DH_USERNAME/$IMAGE_NAME:v${{steps.get_version.outputs.major}}.${{steps.get_version.outputs.minor}}
+            docker tag $DH_USERNAME/$IMAGE_NAME:${{steps.get_version.outputs.version}} $DH_USERNAME/$IMAGE_NAME:v${{steps.get_version.outputs.major}}.${{steps.get_version.outputs.minor}}.${{steps.get_version.outputs.patch}}
+            docker tag $DH_USERNAME/$IMAGE_NAME:${{steps.get_version.outputs.version}} $DH_USERNAME/$IMAGE_NAME:v${{steps.get_version.outputs.version-without-v}}
+            docker push $DH_USERNAME/$IMAGE_NAME:v${{steps.get_version.outputs.major}}
+            docker push $DH_USERNAME/$IMAGE_NAME:v${{steps.get_version.outputs.major}}.${{steps.get_version.outputs.minor}}
+            docker push $DH_USERNAME/$IMAGE_NAME:v${{steps.get_version.outputs.major}}.${{steps.get_version.outputs.minor}}.${{steps.get_version.outputs.patch}}
+            docker push $DH_USERNAME/$IMAGE_NAME:${{steps.get_version.outputs.version}}
+          done
       - name: Log in to Docker Hub Helm Registry
         if: steps.get_version.outputs.is-semver == 'true'
         run: |
