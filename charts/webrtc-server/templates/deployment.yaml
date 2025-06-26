@@ -113,10 +113,12 @@ spec:
               value: "{{ .Values.env.HTTPS_CERT_FULLCHAIN }}"
             - name: HTTPS_CERT_PRIVKEY
               value: "{{ .Values.env.HTTPS_CERT_PRIVKEY }}"
-{{- with .Values.extraEnv }}
-{{- toYaml . | nindent 12 }}
-{{- end }}
-              
+            {{- with .Values.extraEnv }}
+            {{- range . }}
+            - name: {{ .name }}
+              value: {{ tpl .value $ | quote }}
+            {{- end }}
+            {{- end }}              
           ports:
             - containerPort: 80
               name: http
