@@ -80,7 +80,7 @@ spec:
     spec:
       containers:
         - name: {{ .Values.statefulset.containerName }}
-          image: io2060/webrtc-loadbalancer:{{ .Chart.Version }}
+          image: io2060/webrtc-load-balancer:{{ .Chart.Version }} 
           imagePullPolicy: {{ .Values.statefulset.pullPolicy }}
           resources:
             requests:
