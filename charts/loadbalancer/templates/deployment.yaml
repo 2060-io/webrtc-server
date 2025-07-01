@@ -11,31 +11,25 @@ spec:
       port: {{ .Values.service.ports.http }}
       protocol: TCP
       targetPort: 3001
+    {{- if .Values.appCheckProxy.enabled }}
     - name: app-check
       protocol: TCP
       port: {{ .Values.service.ports.appCheck }}
       targetPort: 3100
+    {{- end }}
 ---
+{{- if .Values.appCheckProxy.enabled }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{.Values.configMap.name}}
+  name: {{ .Values.appCheckProxy.configMap.name }}
   namespace: {{ .Release.Namespace }}
 data:
-  ENDPOINT_URLS: |
-    [
-      {
-        "pattern": "/rooms.*",
-        "baseUrl": "http://webrtc-loadbalancer.{{ .Release.Namespace }}"
-      },
-      {
-        "pattern": "/healt.*",
-        "baseUrl": "http://webrtc-loadbalancer.{{ .Release.Namespace }}"
-      }
-    ]
-
+  ENDPOINT_URLS: |-
+    {{- tpl .Values.appCheckProxy.configMap.endpointUrls . | nindent 4 }}
+{{- end }}
 ---
-
+{{- if .Values.ingress.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -59,9 +53,9 @@ spec:
               service:
                 name: {{ .Values.service.name }}
                 port:
-                  number: 3100
+                  number: {{ ternary .Values.service.ports.appCheck .Values.service.ports.http .Values.appCheckProxy.enabled }}
+{{- end }}
 ---
-
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -76,28 +70,19 @@ spec:
   template:
     metadata:
       labels:
-         app: {{ .Values.app.name }}
+        app: {{ .Values.app.name }}
     spec:
       containers:
         - name: {{ .Values.statefulset.containerName }}
-          image: io2060/webrtc-load-balancer:{{ .Chart.Version }} 
+          image: io2060/webrtc-load-balancer:{{ .Chart.Version }}
           imagePullPolicy: {{ .Values.statefulset.pullPolicy }}
           resources:
-            requests:
-              cpu: {{ .Values.statefulset.resources.webrtcLoadbalancer.requests.cpu | quote }}
-              memory: {{ .Values.statefulset.resources.webrtcLoadbalancer.requests.memory | quote }}
-            limits:
-              cpu: {{ .Values.statefulset.resources.webrtcLoadbalancer.limits.cpu | quote }}
-              memory: {{ .Values.statefulset.resources.webrtcLoadbalancer.limits.memory | quote }}
+            {{- toYaml .Values.statefulset.resources.webrtcLoadbalancer | nindent 12 }}
           env:
-            - name: LOG_LEVEL
-              value: "{{ .Values.env.LOG_LEVEL }}"
-            - name: APP_PORT
-              value: "{{ .Values.env.APP_PORT }}"
-            - name: REDIS_URL
-              value: "{{ .Values.env.REDIS_URL }}"
-            - name: HEALTH_CHECK_INTERVAL
-              value: "{{ .Values.env.HEALTH_CHECK_INTERVAL }}"
+            {{- range $key, $val := .Values.statefulset.env }}
+            - name: {{ $key }}
+              value: {{ tpl $val $ | quote }}
+            {{- end }}
           ports:
             - containerPort: 80
               name: http
@@ -105,39 +90,38 @@ spec:
             - containerPort: 3001
               name: https
               protocol: TCP
+        {{- if .Values.appCheckProxy.enabled }}
         - name: {{ .Values.appCheckProxy.name }}
           image: io2060/app-check-proxy:v1.0.0
           securityContext:
             readOnlyRootFilesystem: false
           imagePullPolicy: {{ .Values.appCheckProxy.pullPolicy }}
           resources:
-            requests:
-              cpu: {{ .Values.statefulset.resources.appCheckProxy.requests.cpu | quote }}
-              memory: {{ .Values.statefulset.resources.appCheckProxy.requests.memory | quote }}
-            limits:
-              cpu: {{ .Values.statefulset.resources.appCheckProxy.limits.cpu | quote }}
-              memory: {{ .Values.statefulset.resources.appCheckProxy.limits.memory | quote }}
+            {{- toYaml .Values.appCheckProxy.resources | nindent 12 }}
           env:
-            - name: APP_PORT
-              value: "{{ .Values.appCheckProxy.env.APP_PORT }}"
-            - name: FIREBASE_CFG_FILE
-              value: "{{ .Values.appCheckProxy.env.FIREBASE_CFG_FILE }}"
+            {{- range $key, $val := .Values.appCheckProxy.env }}
+            - name: {{ $key }}
+              value: {{ tpl $val $ | quote }}
+            {{- end }}
             - name: ENDPOINT_URLS
               valueFrom:
                 configMapKeyRef:
-                  name: "{{ .Values.configMap.name }}"
-                  key: "{{ .Values.configMap.key }}"
+                  name: {{ .Values.appCheckProxy.configMap.name }}
+                  key: {{ .Values.appCheckProxy.configMap.key }}
           ports:
             - containerPort: 3100
           volumeMounts:
             - name: firebase-config-volume
               mountPath: /config
               readOnly: false
+        {{- end }}
       imagePullSecrets:
         - name: registry-credentials
       securityContext:
         fsGroup: 185
       volumes:
+        {{- if .Values.appCheckProxy.enabled }}
         - name: firebase-config-volume
           configMap:
             name: firebase-config
+        {{- end }}
