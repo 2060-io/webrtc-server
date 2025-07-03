@@ -115,10 +115,6 @@ spec:
               mountPath: /config
               readOnly: false
         {{- end }}
-      imagePullSecrets:
-        - name: registry-credentials
-      securityContext:
-        fsGroup: 185
       volumes:
         {{- if .Values.appCheckProxy.enabled }}
         - name: firebase-config-volume
