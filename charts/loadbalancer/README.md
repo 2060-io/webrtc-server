@@ -2,24 +2,22 @@
 
 ## Overview
 
-This Helm chart deploys the loadbalancer application along with the necessary Kubernetes resources. It includes:
+This Helm chart deploys the `webrtc-load-balancer` application along with the necessary Kubernetes resources. It supports an optional `appCheckProxy` container and includes:
 
-- **Service**: Exposes the application.
-- **Ingress**: Routes external traffic to the service.
-- **ConfigMap**: To use app-check-proxy endpoints
-- **StatefulSet**: Manages the deployment of the loadbalancer application.
+- **Service**: Exposes the application via HTTP and optionally app-check port.
+- **Ingress**: Routes external traffic to the service with TLS.
+- **ConfigMap**: Used to provide `ENDPOINT_URLS` for `appCheckProxy` when enabled.
+- **StatefulSet**: Manages the deployment of the application with support for multiple containers.
 
 ## Chart Structure
 
-- `Chart.yaml`: Contains metadata about the chart.
-- `values.yaml`: Holds configuration values for the chart.
-- `templates/deployment.yaml`: A single template file that defines all resources.
+- `Chart.yaml`: Metadata for the Helm chart.
+- `values.yaml`: Configurable parameters.
+- `templates/`: Helm templates including StatefulSet, Service, Ingress, and ConfigMap.
 
 ## Installation
 
 ### 1. Lint the Chart
-
-Ensure the chart is correctly formatted:
 
 ```bash
 helm lint ./charts/loadbalancer
@@ -27,15 +25,11 @@ helm lint ./charts/loadbalancer
 
 ### 2. Render Templates
 
-Preview the generated Kubernetes manifests:
-
 ```bash
 helm template mi-release ./charts/loadbalancer --namespace <your-namespace>
 ```
 
 ### 3. Dry-Run Installation
-
-Simulate the installation without making changes to your cluster:
 
 ```bash
 helm install --dry-run --debug mi-release ./charts/loadbalancer --namespace <your-namespace>
@@ -43,34 +37,40 @@ helm install --dry-run --debug mi-release ./charts/loadbalancer --namespace <you
 
 ### 4. Install the Chart
 
-If the target namespace already exists, ensure `createNamespace` is set to `false` in `values.yaml`. Otherwise, set it to `true` to have Helm create the namespace automatically.
-
 ```bash
 helm install mi-release ./charts/loadbalancer --namespace <your-namespace>
 ```
 
-**Note:**  
-
-- `<release-name>` is a name you assign to this deployment instance. It helps Helm track and manage the release.  
-- Example: If deploying in production, you might use:
-
-  ```bash
-  helm install didcomm-prod ./charts/loadbalancer-chart --namespace <your-namespace-prod>
-  ```
-
 ## Configuration
 
-All configurable parameters are located in the `values.yaml` file. You can adjust:
+All values are configured through the `values.yaml` file:
 
-- **Service**: The name and configuration of the Service.
-- **Ingress**: Hostname and TLS settings.
-- **RBAC**: Names for ServiceAccount, Role, and RoleBinding.
-- **StatefulSet**: Application settings such as replicas, container image, and storage.
-- **Environment Variables**: Specific environment settings for your application container.
+### Global
+
+- `global.domain`: The base domain used in ingress and ConfigMap.
+
+### StatefulSet
+
+- `statefulset.name`, `replicas`, `pullPolicy`, `resources`: Settings for the main container.
+- `statefulset.env`: List of environment variables rendered with `tpl` support.
+
+### appCheckProxy
+
+- `enabled`: Enables or disables the container.
+- `name`, `pullPolicy`, `env`, `resources`: Independent settings.
+- `configMap.name` and `key`: Used to inject `ENDPOINT_URLS`.
+
+### Ingress
+
+- `enabled`: Enables the ingress.
+- `host`, `tlsSecret`: Rendered via `tpl`.
+
+### Service
+
+- `name`: The service name.
+- `ports.http`, `ports.appCheck`: Ports for main app and proxy.
 
 ## Uninstalling the Chart
-
-To remove the deployed release:
 
 ```bash
 helm uninstall mi-release --namespace <your-namespace>
@@ -78,5 +78,19 @@ helm uninstall mi-release --namespace <your-namespace>
 
 ## Notes
 
-- If the namespace exists externally, set `createNamespace` to `false` in `values.yaml`.
-- Ensure that any pre-existing resources in the namespace do not conflict with those defined in this chart.
+- If the namespace exists, you do **not** need to create it via Helm.
+- The `appCheckProxy` container is **optional** and fully configurable.
+- Use `tpl` when referencing templated values in environment variables or domains.
+- You can configure the `ENDPOINT_URLS` content for `appCheckProxy` directly via:
+
+```yaml
+appCheckProxy:
+  configMap:
+    endpointUrls: |
+      [
+        {
+          "pattern": "/.*",
+          "baseUrl": "http://webrtc-loadbalancer.{{ .Release.Namespace }}"
+        }
+      ]
+```

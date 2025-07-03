@@ -1,62 +1,67 @@
-
 global:
   domain: example.io # Replace with your actual domain
 
 app:
-  name: webrtc-server-0
+  name: webrtc-load-balancer
 
 statefulset:
-  name: webrtc-loadbalancer
-  serviceName: webrtc-loadbalancer-service
+  name: webrtc-load-balancer
+  serviceName: webrtc-load-balancer-service
   replicas: 1
-  containerName: webrtc-loadbalancer-container
+  containerName: webrtc-load-balancer-container
   pullPolicy: Always
   storage: 1Gi
-  resources: # Define resource requests and limits for the container
+  resources:
     webrtcLoadbalancer:
       requests:
-        cpu: "50m"
-        memory: "128Mi"
+        cpu: '50m'
+        memory: '128Mi'
       limits:
-        cpu: "200m"
-        memory: "256Mi"
-    appCheckProxy:
-      requests:
-        cpu: "100m"
-        memory: "256"
-      limits:
-        cpu: "300m"
-        memory: "512Mi"
-
-env:
-  LOG_LEVEL: "3"
-  APP_PORT: "3001"
-  REDIS_URL: "redis://redis-service.default:6379"
-  HEALTH_CHECK_INTERVAL: "30000"
+        cpu: '200m'
+        memory: '256Mi'
+  env:
+    LOG_LEVEL: '3'
+    APP_PORT: '3001'
+    REDIS_URL: 'redis://redis-service.{{ .Release.Namespace }}:6379'
+    HEALTH_CHECK_INTERVAL: '30000'
 
 service:
-  name: "webrtc-loadbalancer"
+  name: 'webrtc-load-balancer'
   ports:
     http: 80
     appCheck: 3100
 
 ingress:
-  name: webrtc-loadbalancer
+  name: webrtc-load-balancer
   enabled: true
   host: webrtc.{{ .Values.global.domain }}
   tlsSecret: webrtc.{{ .Values.global.domain }}-cert
 
-configMap:
-  name: app-check-proxy-webrtc-loadbalancer
-  key: ENDPOINT_URLS
-
-# Environment variables for app-check-proxy
 appCheckProxy:
+  enabled: false
   name: app-check-proxy-container
   pullPolicy: Always
   env:
-    APP_PORT: "3100"
-    FIREBASE_CFG_FILE: "/config/firebase-cfg.json"
+    APP_PORT: '3100'
+    FIREBASE_CFG_FILE: '/config/firebase-cfg.json'
+  resources:
+    requests:
+      cpu: '100m'
+      memory: '256Mi'
+    limits:
+      cpu: '300m'
+      memory: '512Mi'
   configMap:
-    name: app-check-proxy-webrtc-loadbalancer
+    name: app-check-proxy-webrtc-load-balancer
     key: ENDPOINT_URLS
+    endpointUrls: |
+      [
+        {
+          "pattern": "/.*",
+          "baseUrl": "http://{{.Values.service.name}}.{{ .Release.Namespace }}"
+        },
+        {
+          "pattern": "/healt.*",
+          "baseUrl": "http://{{.Values.service.name}}.{{ .Release.Namespace }}"
+        }
+      ]
