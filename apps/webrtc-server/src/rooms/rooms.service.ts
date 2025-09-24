@@ -169,7 +169,6 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
     if (!room) {
       this.logger.log(`[handleConnection] Creating new room: ${roomId}`)
       room = await this.getOrCreateRoom({ roomId })
-      this.rooms.set(roomId, room)
       this.logger.log(`[handleConnection] has been created room: ${roomId}`)
     }
 
