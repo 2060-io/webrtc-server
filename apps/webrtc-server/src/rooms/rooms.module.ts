@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common'
 import { RoomsService } from './rooms.service'
 import { RoomsController } from './rooms.controller'
-import { NotificationService } from 'src/lib/notification.service'
+import { NotificationService } from '../lib/notification.service'
 
 @Module({
   controllers: [RoomsController],
