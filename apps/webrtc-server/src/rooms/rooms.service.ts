@@ -22,7 +22,6 @@ import {
   CreateBroadcasterTransportDto,
 } from './dto/rooms.dto'
 import * as protoo from 'protoo-server'
-import * as url from 'url'
 import { Server } from 'https'
 import { NotificationService } from '../lib/notification.service'
 import { ConfigService } from '@nestjs/config'
@@ -59,9 +58,16 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
     //Handle connections from clients
     this.protooServer.on('connectionrequest', (info, accept, reject) => {
       this.logger.log(`[Protoo-server] *** connectionrequest Listener ***`)
-      const wsurl = url.parse(info.request.url, true)
-      const roomId = wsurl.query['roomId'] as string
-      const peerId = wsurl.query['peerId'] as string
+
+      if (!info || !info.request || !info.request.url) {
+        this.logger.warn(`Invalid connection request. Rejecting.`)
+        reject(400, 'Invalid connection request')
+        return
+      }
+
+      const wsUrl = new URL(info.request.url, `https://${info.request.headers.host}`)
+      const roomId = wsUrl.searchParams.get('roomId')
+      const peerId = wsUrl.searchParams.get('peerId')
 
       if (!roomId || !peerId) {
         this.logger.warn(`Missing roomId or peerId. Rejecting connection.`)
