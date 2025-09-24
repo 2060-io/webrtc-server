@@ -65,12 +65,21 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
         return
       }
 
-      const wsUrl = new URL(info.request.url, `https://${info.request.headers.host}`)
+      let wsUrl: URL
+
+      try {
+        wsUrl = new URL(info.request.url, `ws://${info.socket.remoteAddress}`)
+      } catch (error) {
+        this.logger.error(`Invalid connection URL: ${info.request.url}`)
+        reject(400, 'Invalid URL')
+        return
+      }
+
       const roomId = wsUrl.searchParams.get('roomId')
       const peerId = wsUrl.searchParams.get('peerId')
 
       if (!roomId || !peerId) {
-        this.logger.warn(`Missing roomId or peerId. Rejecting connection.`)
+        this.logger.error(`Missing roomId or peerId. Rejecting connection.`)
         reject(400, 'Missing roomId or peerId')
         return
       }

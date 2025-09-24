@@ -231,12 +231,7 @@ describe('RoomsService - initServer Protoo', () => {
       }
 
       jest.spyOn(protoo, 'WebSocketServer').mockReturnValue(mockProtooServer as any)
-      jest.spyOn(url, 'parse').mockReturnValue({
-        query: {
-          roomId: 'testRoom',
-          peerId: 'testPeer',
-        },
-      } as any)
+      jest.spyOn(service, 'handleConnection').mockResolvedValue(undefined as any)
 
       const mockAccept = jest.fn()
       const mockReject = jest.fn()
