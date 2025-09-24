@@ -251,6 +251,7 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
       room.close()
     }
     this.rooms.clear()
+    this.notificationUris.clear()
   }
 
   /**
@@ -315,6 +316,7 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
         // Handle room closure
         room.on('close', () => {
           this.rooms.delete(roomId)
+          this.notificationUris.delete(roomId)
           this.logger.log(`Room closed and removed [roomId:${roomId}]`)
         })
 
@@ -346,6 +348,7 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
       const room = this.getRoomById(roomId)
       room.close()
       this.rooms.delete(roomId)
+      this.notificationUris.delete(roomId)
       this.logger.log(`Room deleted [roomId:${roomId}]`)
     } else {
       this.logger.warn(`Room not found for deletion [roomId:${roomId}]`)
