@@ -8,6 +8,7 @@ import {
   BadRequestException,
   OnModuleDestroy,
   OnModuleInit,
+  ConflictException,
 } from '@nestjs/common'
 import * as mediasoup from 'mediasoup'
 import { Room } from '../lib/Room'
@@ -114,7 +115,7 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
 
       if (!this.httpServer) {
         this.logger.error(`HTTP server not found. Ensure it is set in main.ts.`)
-        throw new Error(`HTTP server not found. Ensure it is set in main.ts.`)
+        throw new InternalServerErrorException(`HTTP server not found. Ensure it is set in main.ts.`)
       }
 
       // Initialize the protoo WebSocket server
@@ -127,7 +128,10 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
       this.logger.log('[Protoo-server] WebSocket initialized.')
     } catch (error) {
       this.logger.error('Error during Protoo server initialization', getErrorDetails(error))
-      throw error
+      throw new InternalServerErrorException(`Error during Protoo server initialization: ${getErrorMessage(error)}`, {
+        cause: error as Error,
+        description: 'RoomsService.initServer',
+      })
     }
   }
 
@@ -385,7 +389,7 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
       // Check if the room already exists
       if (this.rooms.has(roomIdToUse)) {
         this.logger.warn(`[createRoom] Room already exists: ${roomIdToUse}`)
-        throw new Error(`Room with roomId ${roomIdToUse} already exists.`)
+        throw new ConflictException(`Room with roomId ${roomIdToUse} already exists.`)
       }
 
       // Create or retrieve the room
@@ -499,8 +503,8 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
         sctpCapabilities: dto.sctpCapabilities,
       })
     } catch (error) {
-      // Throw a generic error if the transport creation fails
-      throw new Error(`Failed to create broadcaster transport: ${getErrorMessage(error)}`)
+      // Throw a error if the transport creation fails
+      throw new BadRequestException(`Failed to create broadcaster transport: ${getErrorMessage(error)}`)
     }
   }
 
@@ -531,7 +535,7 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
         dtlsParameters: dto.dtlsParameters,
       })
     } catch (error) {
-      throw new Error(`Failed to connect broadcaster transport: ${getErrorMessage(error)}`)
+      throw new BadRequestException(`Failed to connect broadcaster transport: ${getErrorMessage(error)}`)
     }
   }
 
