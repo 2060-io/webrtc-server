@@ -35,14 +35,14 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
   private nextMediasoupWorkerIdx = 0
   private readonly rooms = new Map<string, Room>()
   private readonly notificationUris = new Map<string, string>()
-  private readonly notificationService: NotificationService
 
   private protooServer: protoo.WebSocketServer
   private httpServer: Server
 
-  constructor(private readonly configService: ConfigService) {
-    this.notificationService = new NotificationService()
-  }
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly notificationService: NotificationService,
+  ) {}
 
   async onModuleInit(): Promise<void> {
     await this.initializeMediasoupWorkers()
