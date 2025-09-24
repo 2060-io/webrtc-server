@@ -382,8 +382,8 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
       const wsUrl = `wss://${announcedIp}:${port}`
       this.logger.debug(`[createRoom] WebSocket URL: ${wsUrl}`)
 
-      // Check if the room already exists in notificationUris
-      if (this.notificationUris.has(roomIdToUse)) {
+      // Check if the room already exists
+      if (this.rooms.has(roomIdToUse)) {
         this.logger.warn(`[createRoom] Room already exists: ${roomIdToUse}`)
         throw new Error(`Room with roomId ${roomIdToUse} already exists.`)
       }
