@@ -8,6 +8,7 @@ import {
   BadRequestException,
   OnModuleDestroy,
   OnModuleInit,
+  ConflictException,
 } from '@nestjs/common'
 import * as mediasoup from 'mediasoup'
 import { Room } from '../lib/Room'
@@ -21,7 +22,6 @@ import {
   CreateBroadcasterTransportDto,
 } from './dto/rooms.dto'
 import * as protoo from 'protoo-server'
-import * as url from 'url'
 import { Server } from 'https'
 import { NotificationService } from '../lib/notification.service'
 import { ConfigService } from '@nestjs/config'
@@ -35,14 +35,14 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
   private nextMediasoupWorkerIdx = 0
   private readonly rooms = new Map<string, Room>()
   private readonly notificationUris = new Map<string, string>()
-  private readonly notificationService: NotificationService
 
   private protooServer: protoo.WebSocketServer
   private httpServer: Server
 
-  constructor(private readonly configService: ConfigService) {
-    this.notificationService = new NotificationService()
-  }
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly notificationService: NotificationService,
+  ) {}
 
   async onModuleInit(): Promise<void> {
     await this.initializeMediasoupWorkers()
@@ -58,12 +58,28 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
     //Handle connections from clients
     this.protooServer.on('connectionrequest', (info, accept, reject) => {
       this.logger.log(`[Protoo-server] *** connectionrequest Listener ***`)
-      const wsurl = url.parse(info.request.url, true)
-      const roomId = wsurl.query['roomId'] as string
-      const peerId = wsurl.query['peerId'] as string
+
+      if (!info || !info.request || !info.request.url) {
+        this.logger.warn(`Invalid connection request. Rejecting.`)
+        reject(400, 'Invalid connection request')
+        return
+      }
+
+      let wsUrl: URL
+
+      try {
+        wsUrl = new URL(info.request.url, `ws://${info.socket.remoteAddress}`)
+      } catch (error) {
+        this.logger.error(`Invalid connection URL: ${info.request.url}`)
+        reject(400, 'Invalid URL')
+        return
+      }
+
+      const roomId = wsUrl.searchParams.get('roomId')
+      const peerId = wsUrl.searchParams.get('peerId')
 
       if (!roomId || !peerId) {
-        this.logger.warn(`Missing roomId or peerId. Rejecting connection.`)
+        this.logger.error(`Missing roomId or peerId. Rejecting connection.`)
         reject(400, 'Missing roomId or peerId')
         return
       }
@@ -114,7 +130,7 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
 
       if (!this.httpServer) {
         this.logger.error(`HTTP server not found. Ensure it is set in main.ts.`)
-        throw new Error(`HTTP server not found. Ensure it is set in main.ts.`)
+        throw new InternalServerErrorException(`HTTP server not found. Ensure it is set in main.ts.`)
       }
 
       // Initialize the protoo WebSocket server
@@ -127,7 +143,10 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
       this.logger.log('[Protoo-server] WebSocket initialized.')
     } catch (error) {
       this.logger.error('Error during Protoo server initialization', getErrorDetails(error))
-      throw error
+      throw new InternalServerErrorException(`Error during Protoo server initialization: ${getErrorMessage(error)}`, {
+        cause: error as Error,
+        description: 'RoomsService.initServer',
+      })
     }
   }
 
@@ -165,7 +184,6 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
     if (!room) {
       this.logger.log(`[handleConnection] Creating new room: ${roomId}`)
       room = await this.getOrCreateRoom({ roomId })
-      this.rooms.set(roomId, room)
       this.logger.log(`[handleConnection] has been created room: ${roomId}`)
     }
 
@@ -251,6 +269,7 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
       room.close()
     }
     this.rooms.clear()
+    this.notificationUris.clear()
   }
 
   /**
@@ -315,6 +334,7 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
         // Handle room closure
         room.on('close', () => {
           this.rooms.delete(roomId)
+          this.notificationUris.delete(roomId)
           this.logger.log(`Room closed and removed [roomId:${roomId}]`)
         })
 
@@ -346,6 +366,7 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
       const room = this.getRoomById(roomId)
       room.close()
       this.rooms.delete(roomId)
+      this.notificationUris.delete(roomId)
       this.logger.log(`Room deleted [roomId:${roomId}]`)
     } else {
       this.logger.warn(`Room not found for deletion [roomId:${roomId}]`)
@@ -379,10 +400,10 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
       const wsUrl = `wss://${announcedIp}:${port}`
       this.logger.debug(`[createRoom] WebSocket URL: ${wsUrl}`)
 
-      // Check if the room already exists in notificationUris
-      if (this.notificationUris.has(roomIdToUse)) {
+      // Check if the room already exists
+      if (this.rooms.has(roomIdToUse)) {
         this.logger.warn(`[createRoom] Room already exists: ${roomIdToUse}`)
-        throw new Error(`Room with roomId ${roomIdToUse} already exists.`)
+        throw new ConflictException(`Room with roomId ${roomIdToUse} already exists.`)
       }
 
       // Create or retrieve the room
@@ -496,8 +517,8 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
         sctpCapabilities: dto.sctpCapabilities,
       })
     } catch (error) {
-      // Throw a generic error if the transport creation fails
-      throw new Error(`Failed to create broadcaster transport: ${getErrorMessage(error)}`)
+      // Throw a error if the transport creation fails
+      throw new BadRequestException(`Failed to create broadcaster transport: ${getErrorMessage(error)}`)
     }
   }
 
@@ -528,7 +549,7 @@ export class RoomsService implements OnModuleInit, OnModuleDestroy {
         dtlsParameters: dto.dtlsParameters,
       })
     } catch (error) {
-      throw new Error(`Failed to connect broadcaster transport: ${getErrorMessage(error)}`)
+      throw new BadRequestException(`Failed to connect broadcaster transport: ${getErrorMessage(error)}`)
     }
   }
 

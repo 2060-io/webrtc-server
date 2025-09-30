@@ -4,6 +4,8 @@ import { RoomsService } from './rooms.service'
 import { HttpException, HttpStatus } from '@nestjs/common'
 import { CreateBroadcasterDto, CreateRoomDto } from 'src/rooms/dto/rooms.dto'
 import { getErrorMessage } from '../utils/error-utils'
+import { NotificationService } from '../lib/notification.service'
+import { ConfigService } from '@nestjs/config'
 
 describe('RoomsController', () => {
   let controller: RoomsController
@@ -24,11 +26,17 @@ describe('RoomsController', () => {
             connectBroadcasterTransport: jest.fn(),
           },
         },
+        { provide: NotificationService, useValue: { sendNotification: jest.fn(), post: jest.fn() } },
+        { provide: ConfigService, useValue: { get: jest.fn() } },
       ],
     }).compile()
 
     controller = module.get<RoomsController>(RoomsController)
-    service = module.get(RoomsService)
+    service = module.get(RoomsService) as jest.Mocked<RoomsService>
+  })
+
+  afterEach(() => {
+    jest.clearAllMocks()
   })
 
   it('should be defined', () => {

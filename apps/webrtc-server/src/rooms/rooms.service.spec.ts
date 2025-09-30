@@ -7,6 +7,7 @@ import { Test } from '@nestjs/testing'
 import { ConfigService } from '@nestjs/config'
 import { HttpException, HttpStatus } from '@nestjs/common'
 import url from 'url'
+import { NotificationService } from '../lib/notification.service'
 
 jest.mock('../lib/Room', () => ({
   Room: {
@@ -49,6 +50,7 @@ describe('RoomsService', () => {
           },
         },
         RoomsService,
+        NotificationService,
       ],
     }).compile()
 
@@ -194,7 +196,7 @@ describe('RoomsService - initServer Protoo', () => {
     } as unknown as ConfigService
 
     const module = await Test.createTestingModule({
-      providers: [RoomsService, { provide: ConfigService, useValue: mockConfigService }],
+      providers: [RoomsService, { provide: ConfigService, useValue: mockConfigService }, NotificationService],
     }).compile()
 
     service = module.get<RoomsService>(RoomsService)
@@ -229,12 +231,7 @@ describe('RoomsService - initServer Protoo', () => {
       }
 
       jest.spyOn(protoo, 'WebSocketServer').mockReturnValue(mockProtooServer as any)
-      jest.spyOn(url, 'parse').mockReturnValue({
-        query: {
-          roomId: 'testRoom',
-          peerId: 'testPeer',
-        },
-      } as any)
+      jest.spyOn(service, 'handleConnection').mockResolvedValue(undefined as any)
 
       const mockAccept = jest.fn()
       const mockReject = jest.fn()
