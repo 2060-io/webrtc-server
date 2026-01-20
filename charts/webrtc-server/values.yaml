@@ -39,11 +39,14 @@ statefulset:
   storage: 1Gi
   resources: # Default resources requests and limits for the container
     requests:
-      cpu: "200m"
-      memory: "256Mi"
-    limits:
-      cpu: "500m"
+      cpu: "1"
       memory: "512Mi"
+    limits:
+      cpu: "1"
+      memory: "512Mi"
+
+mediasoup:
+  numWorkers: 1
 
 # Environment variables
 env:

@@ -85,6 +85,8 @@ spec:
               value: "{{ .Values.env.LOG_LEVEL }}"
             - name: DEBUG
               value: "{{ .Values.env.DEBUG }}"
+            - name: MEDIASOUP_NUM_WORKERS
+              value: "{{ .Values.mediasoup.numWorkers }}"
             - name: PROTOO_LISTEN_PORT
               value: "{{ .Values.env.PROTOO_LISTEN_PORT }}"
             - name: MEDIASOUP_ANNOUNCED_IP
