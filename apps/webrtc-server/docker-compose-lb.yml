@@ -13,6 +13,7 @@ services:
       - PROTOO_LISTEN_PORT=4443
       - MEDIASOUP_MIN_PORT=40000
       - MEDIASOUP_MAX_PORT=41000
+      - MEDIASOUP_NUM_WORKERS=1
       - HTTPS_CERT_FULLCHAIN=/config/certs/fullchain.pem
       - HTTPS_CERT_PRIVKEY=/config/certs/privkey.pem
       - REDIS_URL=redis://redis:6379
@@ -43,6 +44,7 @@ services:
       - PROTOO_LISTEN_PORT=4444
       - MEDIASOUP_MIN_PORT=41001
       - MEDIASOUP_MAX_PORT=42000
+      - MEDIASOUP_NUM_WORKERS=1
       - HTTPS_CERT_FULLCHAIN=/config/certs/fullchain.pem
       - HTTPS_CERT_PRIVKEY=/config/certs/privkey.pem
       - REDIS_URL=redis://redis:6379

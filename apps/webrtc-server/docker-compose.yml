@@ -1,4 +1,4 @@
-version: '3.7'
+version: "3.7"
 services:
   mediasoup:
     build: .
@@ -10,6 +10,7 @@ services:
       - PROTOO_LISTEN_PORT=4443
       - MEDIASOUP_MIN_PORT=40000
       - MEDIASOUP_MAX_PORT=50000
+      - MEDIASOUP_NUM_WORKERS=1
       - HTTPS_CERT_FULLCHAIN=/config/certs/fullchain.pem
       - HTTPS_CERT_PRIVKEY=/config/certs/privkey.pem
       - MEDIASOUP_CLIENT_ENABLE_ICESERVER=yes
@@ -20,10 +21,10 @@ services:
       - MEDIASOUP_CLIENT_ICESERVER_PASS=test123
       - MEDIASOUP_CLIENT_PROTOOPORT=443
       - MEDIASOUP_INGRESS_HOST=webrtc.prueba.2060.io
-      - LOADBALANCER_URL=http://192.168.10.18:3000 #define if you need load balancer app
-      - SERVICE_URL=https://192.168.10.18 #define if you need load balancer app
+      #- LOADBALANCER_URL=http://192.168.10.18:3000 #define if you need load balancer app
+      #- SERVICE_URL=https://192.168.10.18 #define if you need load balancer app
     ports:
-      - '443:4443'
+      - "443:4443"
     networks:
       - webrtc_network
     volumes:
@@ -37,8 +38,8 @@ services:
     volumes:
       - ./certs/turnserver.conf:/etc/turnserver.conf
     ports:
-      - '3478:3478'
-      - '3478:3478/udp'
+      - "3478:3478"
+      - "3478:3478/udp"
     networks:
       - webrtc_network
 
