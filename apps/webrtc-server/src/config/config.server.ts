@@ -22,7 +22,11 @@ export const config = {
   ],
   // mediasoup settings.
   mediasoup: {
-    numWorkers: Object.keys(os.cpus()).length,
+    numWorkers: (() => {
+      const envWorkers = parseInt(process.env.MEDIASOUP_NUM_WORKERS ?? '', 10)
+      const parsed = Number.isFinite(envWorkers) && envWorkers > 0 ? envWorkers : os.cpus().length
+      return Math.max(parsed, 1)
+    })(),
     workerSettings: {
       logLevel: 'debug',
       logTags: ['info', 'ice', 'dtls', 'rtp', 'srtp', 'rtcp', 'rtx', 'bwe', 'score', 'simulcast', 'svc', 'sctp'],
