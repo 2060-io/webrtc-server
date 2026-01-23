@@ -24,7 +24,7 @@ export const config = {
   mediasoup: {
     numWorkers: (() => {
       const envWorkers = parseInt(process.env.MEDIASOUP_NUM_WORKERS ?? '', 10)
-      const parsed = Number.isFinite(envWorkers) && envWorkers > 0 ? envWorkers : os.cpus().length
+      const parsed = Number.isFinite(envWorkers) && envWorkers > 0 ? envWorkers : 1
       return Math.max(parsed, 1)
     })(),
     workerSettings: {

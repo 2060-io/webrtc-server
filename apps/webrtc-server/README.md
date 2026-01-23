@@ -65,7 +65,7 @@ This project is based on [Mediasoup-demo v3](https://github.com/versatica/medias
 | `MEDIASOUP_INGRESS_HOST` | Ingress host for the mediasoup client.                                                                   |                                     |
 | `MEDIASOUP_MIN_PORT`     | Minimum port for RTC connections in mediasoup.                                                           | `40000`                             |
 | `MEDIASOUP_MAX_PORT`     | Maximum port for RTC connections in mediasoup.                                                           | `49999`                             |
-| `MEDIASOUP_NUM_WORKERS`  | Defines the number of mediasoup workers to start.                                                        | CPU count                           |
+| `MEDIASOUP_NUM_WORKERS`  | Defines the number of mediasoup workers to start.                                                        | `1`                                 |
 | `MEDIASOUP_LISTEN_IP`    | The listening IP for audio/video in mediasoup.                                                           | `0.0.0.0` or `127.0.0.1`            |
 | `MEDIASOUP_ANNOUNCED_IP` | Public IP address for audio/video in mediasoup..                                                         |                                     |
 | `MEDIASOUP_INGRESS_HOST` | Set Ingress host for /rooms response                                                                     |                                     |
@@ -102,7 +102,7 @@ MEDIASOUP_CLIENT_ICESERVER_HOST=<Public_IP>
 
 ### Mediasoup worker sizing
 
-Kubernetes nodes often report the host CPU count to Node.js, even when a container has a lower CPU limit. This can cause mediasoup to spawn too many workers and contend for CPU. Use `MEDIASOUP_NUM_WORKERS` to keep the worker count aligned with your pod limits.
+Kubernetes nodes often report the host CPU count to Node.js, even when a container has a lower CPU limit. This can cause mediasoup to spawn too many workers and contend for CPU. By default, we now use `1` worker unless you set `MEDIASOUP_NUM_WORKERS`.
 
 - Local/Docker example: `MEDIASOUP_NUM_WORKERS=1`
 - Helm/Kubernetes example:
