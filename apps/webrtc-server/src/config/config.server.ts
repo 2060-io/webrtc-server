@@ -1,5 +1,3 @@
-import * as os from 'os'
-
 export const config = {
   // Signaling settings (protoo WebSocket server and HTTP API server).
   https: {
@@ -22,7 +20,7 @@ export const config = {
   ],
   // mediasoup settings.
   mediasoup: {
-    numWorkers: Object.keys(os.cpus()).length,
+    numWorkers: parseInt(process.env.MEDIASOUP_NUM_WORKERS ?? '1', 10),
     workerSettings: {
       logLevel: 'debug',
       logTags: ['info', 'ice', 'dtls', 'rtp', 'srtp', 'rtcp', 'rtx', 'bwe', 'score', 'simulcast', 'svc', 'sctp'],
