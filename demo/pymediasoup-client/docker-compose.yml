@@ -7,9 +7,9 @@ services:
     ports:
       - "5000:5000"
     environment:
-      FLASK_APP: app.py
-      FLASK_ENV: test
-      DEFAULT_VIDEO_SRC_URL: "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_2mb.mp4"
+      FLASK_APP: ${FLASK_APP}
+      FLASK_ENV: ${FLASK_ENV}
+      DEFAULT_VIDEO_SRC_URL: ${DEFAULT_VIDEO_SRC_URL}
     networks:
       - networks-bridge
 

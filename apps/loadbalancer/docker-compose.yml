@@ -6,10 +6,10 @@ services:
     image: loadbalancer-webrtc:test
     container_name: loadbalancer-webrtc
     environment:
-      - LOG_LEVEL=3
-      - APP_PORT=3000
-      - REDIS_URL=redis://redis:6379
-      - HEALTH_CHECK_INTERVAL=20000
+      LOG_LEVEL: ${LOG_LEVEL}
+      APP_PORT: ${APP_PORT}
+      REDIS_URL: ${REDIS_URL}
+      HEALTH_CHECK_INTERVAL: ${HEALTH_CHECK_INTERVAL}
     restart: always
     ports:
       - 3000:3000
