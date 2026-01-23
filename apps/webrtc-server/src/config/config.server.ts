@@ -20,11 +20,7 @@ export const config = {
   ],
   // mediasoup settings.
   mediasoup: {
-    numWorkers: (() => {
-      const envWorkers = parseInt(process.env.MEDIASOUP_NUM_WORKERS ?? '', 10)
-      const parsed = Number.isFinite(envWorkers) && envWorkers > 0 ? envWorkers : 1
-      return Math.max(parsed, 1)
-    })(),
+    numWorkers: parseInt(process.env.MEDIASOUP_NUM_WORKERS ?? '1', 10),
     workerSettings: {
       logLevel: 'debug',
       logTags: ['info', 'ice', 'dtls', 'rtp', 'srtp', 'rtcp', 'rtx', 'bwe', 'score', 'simulcast', 'svc', 'sctp'],
