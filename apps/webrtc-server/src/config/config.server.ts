@@ -1,5 +1,3 @@
-import * as os from 'os'
-
 export const config = {
   // Signaling settings (protoo WebSocket server and HTTP API server).
   https: {
