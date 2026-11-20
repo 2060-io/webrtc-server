@@ -9,4 +9,4 @@ backend:
     flask_env: test
     debug: 1
     pythonunbuffered: 1
-    video_url: https://interactive-examples.mdn.mozilla.net/media/cc0-videos/friday.mp4
+    video_url: https://s3.minio.dev.2060.io/public/demo-call-video.mp4
