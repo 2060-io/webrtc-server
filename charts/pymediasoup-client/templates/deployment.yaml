@@ -58,8 +58,8 @@ spec:
     spec:
       containers:
         - name: {{ .Values.name }}
-          image: io2060/webrtc-pymediasoup-client-demo:dev
-          imagePullPolicy: Always
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.Version }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
             - name: FLASK_APP
               value: "{{ .Values.backend.env.flask_app }}"

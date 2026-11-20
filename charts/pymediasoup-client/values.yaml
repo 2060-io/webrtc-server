@@ -3,6 +3,13 @@ global:
 
 name: webrtc-pymediasoup-client
 replicas: 1
+
+image:
+  repository: io2060/webrtc-pymediasoup-client-demo
+  # Defaults to the chart version, which cd.yml sets to the release version.
+  tag: ""
+  pullPolicy: IfNotPresent
+
 backend: 
   env:
     flask_app: app.py

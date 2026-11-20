@@ -72,14 +72,12 @@ jobs:
             cp pnpm-lock.yaml apps/$APP/
             docker build -f apps/$APP/Dockerfile -t $DH_USERNAME/$IMAGE_NAME:v$VERSION apps/$APP/
           done
+          # Demo client image, used by the pymediasoup-client chart (its default tag is the chart version)
+          docker build -f demo/pymediasoup-client/Dockerfile -t $DH_USERNAME/webrtc-pymediasoup-client-demo:v$VERSION demo/pymediasoup-client/
 
       - name: Add tags to Docker images and push to Docker Hub
         run: |
-          for APP in webrtc-server loadbalancer; do
-            IMAGE_NAME=$APP
-            if [ "$APP" == "loadbalancer" ]; then
-              IMAGE_NAME="webrtc-load-balancer"
-            fi
+          for IMAGE_NAME in webrtc-server webrtc-load-balancer webrtc-pymediasoup-client-demo; do
             BASE="$DH_USERNAME/$IMAGE_NAME:v$VERSION"
 
             docker tag "$BASE" "$DH_USERNAME/$IMAGE_NAME:v${RELEASE_MAJOR}${SUFFIX}"
