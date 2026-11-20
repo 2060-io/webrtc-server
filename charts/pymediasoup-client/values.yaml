@@ -3,10 +3,17 @@ global:
 
 name: webrtc-pymediasoup-client
 replicas: 1
+
+image:
+  repository: io2060/webrtc-pymediasoup-client-demo
+  # Defaults to the chart version, which cd.yml sets to the release version.
+  tag: ""
+  pullPolicy: IfNotPresent
+
 backend: 
   env:
     flask_app: app.py
     flask_env: test
     debug: 1
     pythonunbuffered: 1
-    video_url: https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_2mb.mp4
+    video_url: https://s3.minio.dev.2060.io/public/demo-call-video.mp4

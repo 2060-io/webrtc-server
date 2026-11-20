@@ -53,6 +53,22 @@ helm upgrade --install chatbot-dev ./charts/pymediasoup-client --namespace 2060-
 
 All configurable parameters are located in the `values.yaml` file.
 
+### Image
+
+| Value | Default | Description |
+| --- | --- | --- |
+| `image.repository` | `io2060/webrtc-pymediasoup-client-demo` | Image repository. |
+| `image.tag` | `""` | Image tag. When empty, the chart version is used; each release publishes the image with that same tag. |
+| `image.pullPolicy` | `IfNotPresent` | Image pull policy. Set it to `Always` if you use a moving tag such as `dev` or `v1`. |
+
+The chart in this repository carries a placeholder version (`0.0.2`); the release workflow replaces it with the release version. When you install the chart from source, set `image.tag` explicitly.
+
+To pin the image, set `image.tag` to a released version:
+
+```bash
+helm upgrade --install <release-name> ./charts/pymediasoup-client --namespace <your-namespace> --set image.tag=v1.2.0
+```
+
 ## Uninstalling the Chart
 
 To remove the deployed release:
