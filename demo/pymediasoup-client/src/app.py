@@ -7,6 +7,7 @@ from mediasoup import Demo
 from urllib.parse import urlparse, parse_qs
 from aiortc.contrib.media import MediaPlayer, MediaBlackhole
 import subprocess
+import traceback
 
 def get_video_duration(video_url):
     result = subprocess.run([
@@ -44,6 +45,8 @@ def run_demo(ws_url, success_url, failure_url):
         
         print('Demo completed successfully.')
     except Exception as e:
+        # Log the full traceback so the failure shows in the pod log
+        traceback.print_exc()
         # Notify failure_url if provided
         if failure_url:
             requests.put(failure_url, json={"status": "failure"})        
