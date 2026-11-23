@@ -1,15 +1,11 @@
 {
-  "include-component-in-tag": true,
+  "include-component-in-tag": false,
   "include-v-in-tag": true,
-  "tag-separator": "@",
-  "separate-pull-requests": true,
   "bump-minor-pre-major": true,
   "bump-patch-for-minor-pre-major": true,
   "packages": {
-    "apps/loadbalancer": {
-      "release-type": "node"
-    },
-    "apps/webrtc-server": {
+    ".": {
+      "changelog-path": "CHANGELOG.md",
       "release-type": "node"
     }
   },
