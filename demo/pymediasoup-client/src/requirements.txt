@@ -1,5 +1,45 @@
-flask
-websockets
-aiortc
-pymediasoup
-requests
+# Every package is pinned, so a rebuild cannot change the result.
+# pymediasoup, aiortc, av and pyee constrain each other: change them together and
+# test a call before releasing. mediasoup.py passes plain dicts to pymediasoup,
+# which pymediasoup 1.5.0 no longer accepts.
+#
+# Base: the last image known to work (built January 2025), with three changes
+# because PyPI no longer serves a wheel for av 11.0.0:
+#   av 11.0.0 -> 12.3.0, aiortc 1.9.0 -> 1.10.1, pymediasoup 1.1.0 -> 1.2.1
+
+# Direct dependencies
+Flask==3.1.0
+websockets==14.2
+aiortc==1.10.1
+pymediasoup==1.2.1
+requests==2.32.3
+
+# Transitive dependencies
+aioice==0.9.0
+annotated-types==0.7.0
+av==12.3.0
+blinker==1.9.0
+certifi==2024.12.14
+cffi==1.17.1
+charset-normalizer==3.4.1
+click==8.1.8
+cryptography==44.0.0
+dnspython==2.7.0
+google-crc32c==1.6.0
+h264-profile-level-id==1.0.0
+idna==3.10
+ifaddr==0.2.0
+itsdangerous==2.2.0
+Jinja2==3.1.5
+MarkupSafe==3.0.2
+packaging==26.3
+pycparser==2.22
+pydantic==2.10.5
+pydantic_core==2.27.2
+pyee==11.1.1
+pylibsrtp==0.10.0
+pyOpenSSL==25.0.0
+sdp-transform==1.1.0
+typing_extensions==4.12.2
+urllib3==2.3.0
+Werkzeug==3.1.3
