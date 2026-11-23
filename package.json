@@ -1,6 +1,6 @@
 {
   "name": "webrtc-server",
-  "version": "0.0.1",
+  "version": "1.2.0",
   "description": "WebRtc server",
   "author": "",
   "private": true,
