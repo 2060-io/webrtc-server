@@ -18,7 +18,7 @@ def get_video_duration(video_url):
 app = Flask(__name__)
 
 # Environment variable for default video source URL
-DEFAULT_VIDEO_SRC_URL = os.getenv('DEFAULT_VIDEO_SRC_URL', 'https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4')
+DEFAULT_VIDEO_SRC_URL = os.getenv('DEFAULT_VIDEO_SRC_URL', 'https://s3.minio.dev.2060.io/public/demo-call-video.mp4')
 PORT= os.getenv('PORT',5000)
 
 def run_demo(ws_url, success_url, failure_url):
