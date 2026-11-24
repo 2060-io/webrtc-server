@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/2060-io/webrtc-server/compare/v1.2.0...v1.3.0) (2026-11-24)
+
+
+### Features
+
+* support reading ICE server password from an existing secret ([#76](https://github.com/2060-io/webrtc-server/issues/76)) ([cc393df](https://github.com/2060-io/webrtc-server/commit/cc393df1f0eeba8ee73c222a117a65b831386d35))
+
 ## [1.2.0](https://github.com/2060-io/webrtc-server/compare/v1.1.1...v1.2.0) (2026-11-23)
 
 
