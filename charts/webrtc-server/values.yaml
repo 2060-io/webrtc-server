@@ -66,7 +66,16 @@ env:
   HTTPS_CERT_FULLCHAIN: "/config/certificates/tls.crt"
   HTTPS_CERT_PRIVKEY: "/config/certificates/tls.key"
 
-  # Secret configuration
+# ICE server (TURN) credentials
+iceServer:
+  # Name of an existing Kubernetes Secret (same namespace) holding the ICE server password.
+  # When set, MEDIASOUP_CLIENT_ICESERVER_PASS is read from that Secret and
+  # env.MEDIASOUP_CLIENT_ICESERVER_PASS is ignored. Leave empty to use the literal value.
+  existingSecret: ""
+  # Key inside the Secret that holds the password.
+  existingSecretKey: "MEDIASOUP_CLIENT_ICESERVER_PASS"
+
+# Secret configuration
 secret:
   # Recommended for multi-instance mode: Use instanceId to differentiate secret names.
   # name: webrtc-server-{{ .Values.instanceId }}.{{ .Values.global.domain }}-cert
