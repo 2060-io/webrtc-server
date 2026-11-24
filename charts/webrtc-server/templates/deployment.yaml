@@ -108,7 +108,14 @@ spec:
             - name: MEDIASOUP_CLIENT_ICESERVER_USER
               value: "{{ .Values.env.MEDIASOUP_CLIENT_ICESERVER_USER }}"
             - name: MEDIASOUP_CLIENT_ICESERVER_PASS
+              {{- if .Values.iceServer.existingSecret }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ tpl .Values.iceServer.existingSecret . | quote }}
+                  key: {{ required "iceServer.existingSecretKey is required when iceServer.existingSecret is set" .Values.iceServer.existingSecretKey | quote }}
+              {{- else }}
               value: "{{ .Values.env.MEDIASOUP_CLIENT_ICESERVER_PASS }}"
+              {{- end }}
             - name: MEDIASOUP_INGRESS_HOST
               value: "{{ tpl .Values.env.MEDIASOUP_INGRESS_HOST . }}"
             - name: HTTPS_CERT_FULLCHAIN

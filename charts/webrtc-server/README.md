@@ -61,6 +61,18 @@ All configurable parameters are located in the `values.yaml` file. You can adjus
 - **StatefulSet**: Application settings such as replicas, container image, and storage.
 - **Environment Variables**: Specific environment settings for your application container.
 
+### ICE server password from a Secret
+
+By default `MEDIASOUP_CLIENT_ICESERVER_PASS` is set from the literal value `env.MEDIASOUP_CLIENT_ICESERVER_PASS`. To read it from an existing Kubernetes Secret in the release namespace instead, set:
+
+```yaml
+iceServer:
+  existingSecret: my-turn-credentials
+  existingSecretKey: password # defaults to MEDIASOUP_CLIENT_ICESERVER_PASS
+```
+
+When `iceServer.existingSecret` is set, `env.MEDIASOUP_CLIENT_ICESERVER_PASS` is ignored. The chart does not create the Secret.
+
 ## Uninstalling the Chart
 
 To remove the deployed release:
